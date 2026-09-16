@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Usuarios - Proyecto Web</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="container">
+    <h1>Usuarios Registrados</h1>
+
+    <!-- Formulario para agregar registros -->
+    <form id="form-usuario">
+      <input type="text" id="nombre" placeholder="Nombre completo" required>
+      <input type="email" id="email" placeholder="Correo electrónico" required>
+      <button type="submit">Guardar</button>
+    </form>
+
+    <!-- Lista dinámica -->
+    <ul id="lista-usuarios"></ul>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
