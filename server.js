@@ -1,66 +1,39 @@
+// server.js
 const express = require('express');
-const mysql = require('mysql2');
 const cors = require('cors');
 require('dotenv').config();
 
-const app = express();
+const { testConnection } = require('./src/config/db');
+const errorHandler = require('./src/middlewares/errorHandler');
 
-// Middlewares
+const usuariosRoutes = require('./src/routes/usuariosRoutes');
+const postsRoutes = require('./src/routes/postsRoutes');
+const comentariosRoutes = require('./src/routes/comentariosRoutes');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middlewares globales
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Sirve el HTML/CSS/JS de la carpeta public
+app.use(express.static('public')); // sirve el frontend cuando exista
 
-// Pool de conexión a MariaDB
-const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10
+// Ruta de salud, útil para confirmar que el servidor levanta bien
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', mensaje: 'ForoCDS API funcionando correctamente' });
 });
 
-// Probar conexión
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error('❌ Error conectando a MariaDB:', err.message);
-  } else {
-    console.log('✅ Conexión exitosa a la base de datos baseCalidad');
-    connection.release();
-  }
-});
+// Rutas de la API
+app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/posts', postsRoutes);
+app.use('/api/comentarios', comentariosRoutes);
 
-// Endpoint GET: Obtener los usuarios guardados
-app.get('/api/usuarios', (req, res) => {
-  db.query('SELECT * FROM usuarios', (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json(rows);
+// Middleware de manejo de errores (siempre al final)
+app.use(errorHandler);
+
+// Arrancar el servidor solo después de confirmar la conexión a la BD
+testConnection().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
   });
-});
-
-// Endpoint POST: Registrar un usuario nuevo
-app.post('/api/usuarios', (req, res) => {
-  const { nombre, email } = req.body;
-  if (!nombre || !email) {
-    return res.status(400).json({ error: 'Nombre y email son requeridos' });
-  }
-
-  db.query(
-    'INSERT INTO usuarios (nombre, email) VALUES (?, ?)',
-    [nombre, email],
-    (err, result) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      res.status(201).json({ id: result.insertId, nombre, email });
-    }
-  );
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor ejecutándose en http://localhost:${PORT}`);
 });
