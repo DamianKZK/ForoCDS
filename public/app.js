@@ -1,48 +1,43 @@
-const form = document.getElementById('form-usuario');
-const lista = document.getElementById('lista-usuarios');
+const formLogin = document.getElementById('form-login');
+const campoEmail = document.getElementById('campo-email');
+const campoPassword = document.getElementById('campo-password');
+const mensajeEstado = document.getElementById('mensaje-estado');
 
-// Cargar y mostrar usuarios desde la base de datos
-async function cargarUsuarios() {
-  try {
-    const respuesta = await fetch('/api/usuarios');
-    const usuarios = await respuesta.json();
+formLogin.addEventListener('submit', async (evento) =>{
+    evento.preventDefault();
 
-    lista.innerHTML = '';
-    usuarios.forEach((usuario) => {
-      const li = document.createElement('li');
-      li.textContent = `${usuario.nombre} — ${usuario.email}`;
-      lista.appendChild(li);
+    const email = campoEmail.value;
+    const password = campoPassword.value;
+
+    mensajeEstado.textContent = 'Verificando credenciales...';
+    mensajeEstado.style.color = 'black';
+
+    try {
+        //Enviamos los datos al backend usando una petición HTTP POST
+        const respuesta = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json' //Similar a un diccionario en python, le estamos diciendo al back que el tipo de dato que se le va a mandar es un .json
+        },
+        body: JSON.stringify({ email, password }) // Convertimos el objeto JS a texto plano JSON
     });
-  } catch (error) {
-    console.error('Error al obtener usuarios:', error);
-  }
-}
+    // 5. Convertimos la respuesta que nos regrese el backend a un objeto JavaScript
+    const datos = await respuesta.json();
 
-// Enviar nuevo usuario al backend
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const nombre = document.getElementById('nombre').value;
-  const email = document.getElementById('email').value;
-
-  try {
-    const respuesta = await fetch('/api/usuarios', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, email })
-    });
-
+    // 6. Evaluamos el resultado que nos dio el servidor
     if (respuesta.ok) {
-      form.reset();
-      cargarUsuarios(); // Recarga la lista automáticamente
+      // Código HTTP 200 (Éxito)
+        mensajeEstado.textContent = `¡Bienvenido! ${datos.mensaje}`;
+        mensajeEstado.style.color = 'green';
     } else {
-      const errData = await respuesta.json();
-      alert(`Error: ${errData.error}`);
+      // Código HTTP 401, 400, 500, etc. (Fallo)
+        mensajeEstado.textContent = `Error: ${datos.error}`;
+        mensajeEstado.style.color = 'red';
     }
-  } catch (error) {
-    console.error('Error al guardar usuario:', error);
-  }
+    } catch (error) {
+    // Si el servidor está apagado o la red se cayó por completo
+        console.error('Error de conexión:', error);
+        mensajeEstado.textContent = 'No se pudo conectar con el servidor.';
+        mensajeEstado.style.color = 'red';
+    }
 });
-
-// Llamada inicial al cargar la página
-cargarUsuarios();
