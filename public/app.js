@@ -2,7 +2,11 @@ const formLogin = document.getElementById('form-login');
 const campoEmail = document.getElementById('campo-email');
 const campoPassword = document.getElementById('campo-password');
 const mensajeEstado = document.getElementById('mensaje-estado');
+const botonRegistro = document.getElementById('registro-boton');
 
+botonRegistro.addEventListener('click', ()=>{
+    window.location.href = "registro.html";
+});
 formLogin.addEventListener('submit', async (evento) =>{
     evento.preventDefault();
 
