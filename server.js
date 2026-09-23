@@ -1,14 +1,33 @@
+<<<<<<< HEAD
+=======
+// server.js
+const express = require('express');
+const cors = require('cors');
+>>>>>>> main
 require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 
+<<<<<<< HEAD
+const app = express();
+const PORT = process.env.PORT || 3000;
+=======
+const { testConnection } = require('./src/config/db');
+const errorHandler = require('./src/middlewares/errorHandler');
+>>>>>>> main
+
+const usuariosRoutes = require('./src/routes/usuariosRoutes');
+const postsRoutes = require('./src/routes/postsRoutes');
+const comentariosRoutes = require('./src/routes/comentariosRoutes');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares
+// Middlewares globales
 app.use(cors());
 app.use(express.json());
+<<<<<<< HEAD
 app.use(express.static('public'));
 
 // Conexión a MariaDB
@@ -66,3 +85,26 @@ app.post('/api/login', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor activo en: http://localhost:${PORT}`);
 });
+=======
+app.use(express.static('public')); // sirve el frontend cuando exista
+
+// Ruta de salud, útil para confirmar que el servidor levanta bien
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', mensaje: 'ForoCDS API funcionando correctamente' });
+});
+
+// Rutas de la API
+app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/posts', postsRoutes);
+app.use('/api/comentarios', comentariosRoutes);
+
+// Middleware de manejo de errores (siempre al final)
+app.use(errorHandler);
+
+// Arrancar el servidor solo después de confirmar la conexión a la BD
+testConnection().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+  });
+});
+>>>>>>> main
