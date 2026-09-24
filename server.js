@@ -1,21 +1,11 @@
-<<<<<<< HEAD
-=======
 // server.js
-const express = require('express');
-const cors = require('cors');
->>>>>>> main
 require('dotenv').config();
 const express = require('express');
-const mysql = require('mysql2/promise');
 const cors = require('cors');
+const mysql = require('mysql2/promise');
 
-<<<<<<< HEAD
-const app = express();
-const PORT = process.env.PORT || 3000;
-=======
 const { testConnection } = require('./src/config/db');
 const errorHandler = require('./src/middlewares/errorHandler');
->>>>>>> main
 
 const usuariosRoutes = require('./src/routes/usuariosRoutes');
 const postsRoutes = require('./src/routes/postsRoutes');
@@ -27,10 +17,9 @@ const PORT = process.env.PORT || 3000;
 // Middlewares globales
 app.use(cors());
 app.use(express.json());
-<<<<<<< HEAD
 app.use(express.static('public'));
 
-// Conexión a MariaDB
+// Conexión temporal a MariaDB para login
 const pool = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1',
   port: process.env.DB_PORT || 3306,
@@ -41,35 +30,40 @@ const pool = mysql.createPool({
   connectionLimit: 10
 });
 
+// Ruta de salud
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', mensaje: 'ForoCDS API funcionando correctamente' });
+});
+
+// Rutas de la API
+app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/posts', postsRoutes);
+app.use('/api/comentarios', comentariosRoutes);
+
 // Ruta para procesar el login
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
-  // Validación: campos no vacíos
   if (!email || !password) {
     return res.status(400).json({ error: 'Debes ingresar correo y contraseña.' });
   }
 
   try {
-    // 1. Buscamos si existe el correo en la tabla 'cuentas'
     const [filas] = await pool.query(
-      'SELECT id, email, password FROM cuentas WHERE email = ?',
+      'SELECT id, email, password_hash FROM usuarios WHERE email = ?',
       [email]
     );
 
-    // Si el arreglo viene vacío, el correo no está registrado
     if (filas.length === 0) {
       return res.status(401).json({ error: 'Credenciales inválidas.' });
     }
 
     const usuario = filas[0];
 
-    // 2. Comparamos la contraseña recibida con la de la base de datos
-    if (usuario.password !== password) {
+    if (usuario.password_hash !== password) {
       return res.status(401).json({ error: 'Credenciales inválidas.' });
     }
 
-    // 3. Si todo coincide, respondemos éxito (Código 200)
     return res.json({
       mensaje: `Sesión iniciada correctamente como ${usuario.email}`,
       usuarioId: usuario.id
@@ -81,30 +75,12 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`Servidor activo en: http://localhost:${PORT}`);
-});
-=======
-app.use(express.static('public')); // sirve el frontend cuando exista
-
-// Ruta de salud, útil para confirmar que el servidor levanta bien
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', mensaje: 'ForoCDS API funcionando correctamente' });
-});
-
-// Rutas de la API
-app.use('/api/usuarios', usuariosRoutes);
-app.use('/api/posts', postsRoutes);
-app.use('/api/comentarios', comentariosRoutes);
-
-// Middleware de manejo de errores (siempre al final)
+// Middleware de manejo de errores
 app.use(errorHandler);
 
-// Arrancar el servidor solo después de confirmar la conexión a la BD
+// Arrancar el servidor
 testConnection().then(() => {
   app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
   });
 });
->>>>>>> main

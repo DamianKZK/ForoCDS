@@ -4,23 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Foro - Calidad del software</title>
-    <!--<link rel="stylesheet" href="styles.css">-->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <form id = "form-login">
-        <div>   
-            <label for="campo-email"> Correo electrónico</label>
-            <input type ="email" id ="campo-email" required>
-        </div>
-        <br>
-        <div>
-            <label for="campo-password">Contraseña:</label>
-            <input type="password" id="campo-password" required>
-        </div>
-        <button type = "submit">Iniciar sesión</button>
-    </form>
-<p id ="mensaje-estado"></p>
-<a href ="registro.html">Registrarse</a>
+    <main class="card">
+        <h2>Iniciar Sesión</h2>
+        
+        <form id="form-login">
+            <div class="campo">   
+                <label for="campo-email">Correo electrónico</label>
+                <input type="email" id="campo-email" required>
+            </div>
+            
+            <div class="campo">
+                <label for="campo-password">Contraseña</label>
+                <input type="password" id="campo-password" required>
+            </div>
 
-<script src ="app.js"></script>
+            <button type="submit">Iniciar sesión</button>
+        </form>
+
+        <p id="mensaje-estado"></p>
+        
+        <div class="enlace-registro">
+            <a href="registro.html">¿No tienes cuenta? Regístrate</a>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
 </html>
