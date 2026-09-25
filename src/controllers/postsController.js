@@ -1,18 +1,27 @@
 // src/controllers/postsController.js
 const { pool } = require('../config/db');
 
-// GET /api/posts  (con datos del autor y la categoría)
+// GET /api/posts  (con datos del autor y la categoría; admite ?categoria_id= para filtrar)
 async function getPosts(req, res) {
   try {
+    const { categoria_id } = req.query;
+    const params = [];
+    let filtro = '';
+    if (categoria_id) {
+      filtro = 'WHERE p.categoria_id = ?';
+      params.push(categoria_id);
+    }
     const [rows] = await pool.query(`
       SELECT p.id, p.titulo, p.contenido, p.fecha_creacion, p.vistas, p.cerrado,
              u.id AS usuario_id, u.nombre AS autor,
-             c.id AS categoria_id, c.nombre AS categoria
+             c.id AS categoria_id, c.nombre AS categoria,
+             (SELECT COUNT(*) FROM comentarios cm WHERE cm.post_id = p.id) AS total_comentarios
       FROM posts p
       JOIN usuarios u ON p.usuario_id = u.id
       JOIN categorias c ON p.categoria_id = c.id
+      ${filtro}
       ORDER BY p.fecha_creacion DESC
-    `);
+    `, params);
     res.json(rows);
   } catch (error) {
     console.error(error);

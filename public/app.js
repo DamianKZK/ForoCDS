@@ -30,6 +30,15 @@ formLogin.addEventListener('submit', async (evento) =>{
       // Código HTTP 200 (Éxito)
         mensajeEstado.textContent = `¡Bienvenido! ${datos.mensaje}`;
         mensajeEstado.style.color = 'green';
+
+        // Guardamos la sesión en localStorage para que el foro sepa quién eres
+        localStorage.setItem('usuarioId', datos.usuarioId);
+        localStorage.setItem('usuarioNombre', datos.nombre);
+        localStorage.setItem('usuarioEmail', datos.email);
+
+        setTimeout(() => {
+            window.location.href = 'foro.html';
+        }, 800);
     } else {
       // Código HTTP 401, 400, 500, etc. (Fallo)
         mensajeEstado.textContent = `Error: ${datos.error}`;

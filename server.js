@@ -2,14 +2,15 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql2/promise');
+const bcrypt = require('bcrypt');
 
-const { testConnection } = require('./src/config/db');
+const { pool, testConnection } = require('./src/config/db');
 const errorHandler = require('./src/middlewares/errorHandler');
 
 const usuariosRoutes = require('./src/routes/usuariosRoutes');
 const postsRoutes = require('./src/routes/postsRoutes');
 const comentariosRoutes = require('./src/routes/comentariosRoutes');
+const categoriasRoutes = require('./src/routes/categoriasRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,17 +19,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
-
-// Conexión temporal a MariaDB para login
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || '127.0.0.1',
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10
-});
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {
@@ -39,8 +29,10 @@ app.get('/api/health', (req, res) => {
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/posts', postsRoutes);
 app.use('/api/comentarios', comentariosRoutes);
+app.use('/api/categorias', categoriasRoutes);
 
 // Ruta para procesar el login
+// Usa el mismo pool de src/config/db.js — ya no se crea una conexión aparte aquí.
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -50,7 +42,7 @@ app.post('/api/login', async (req, res) => {
 
   try {
     const [filas] = await pool.query(
-      'SELECT id, email, password_hash FROM usuarios WHERE email = ?',
+      'SELECT id, nombre, email, password_hash FROM usuarios WHERE email = ?',
       [email]
     );
 
@@ -59,16 +51,18 @@ app.post('/api/login', async (req, res) => {
     }
 
     const usuario = filas[0];
+    const coincide = await bcrypt.compare(password, usuario.password_hash);
 
-    if (usuario.password_hash !== password) {
+    if (!coincide) {
       return res.status(401).json({ error: 'Credenciales inválidas.' });
     }
 
     return res.json({
       mensaje: `Sesión iniciada correctamente como ${usuario.email}`,
-      usuarioId: usuario.id
+      usuarioId: usuario.id,
+      nombre: usuario.nombre,
+      email: usuario.email,
     });
-
   } catch (error) {
     console.error('Error en la base de datos:', error);
     return res.status(500).json({ error: 'Error del servidor al procesar el login.' });

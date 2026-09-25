@@ -1,5 +1,8 @@
 // src/controllers/usuariosController.js
+const bcrypt = require('bcrypt');
 const { pool } = require('../config/db');
+
+const SALT_ROUNDS = 10;
 
 // GET /api/usuarios
 async function getUsuarios(req, res) {
@@ -33,15 +36,20 @@ async function getUsuarioById(req, res) {
 }
 
 // POST /api/usuarios
+// NOTA: aquí recibimos "password_hash" desde el front por compatibilidad con register.js,
+// pero en realidad es la contraseña en texto plano — la hasheamos aquí antes de guardarla.
 async function crearUsuario(req, res) {
   try {
     const { nombre, email, password_hash } = req.body;
     if (!nombre || !email || !password_hash) {
       return res.status(400).json({ error: 'nombre, email y password_hash son requeridos' });
     }
+
+    const hash = await bcrypt.hash(password_hash, SALT_ROUNDS);
+
     const [result] = await pool.query(
       'INSERT INTO usuarios (nombre, email, password_hash) VALUES (?, ?, ?)',
-      [nombre, email, password_hash]
+      [nombre, email, hash]
     );
     res.status(201).json({ id: result.insertId, nombre, email });
   } catch (error) {
