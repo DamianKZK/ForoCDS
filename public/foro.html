@@ -29,7 +29,7 @@
 
     <section class="card post-form" id="post-form" hidden>
       <h2>Nuevo post</h2>
-      <form id="form-crear-post">
+      <form id="form-crear-post" enctype="multipart/form-data">
         <div class="campo">
           <label for="input-categoria">Categoría</label>
           <select id="input-categoria" required>
@@ -44,7 +44,15 @@
 
         <div class="campo">
           <label for="input-contenido">Contenido</label>
-          <textarea id="input-contenido" rows="4" required placeholder="Escribe los detalles de tu publicación…"></textarea>
+          <textarea id="input-contenido" rows="4" required minlength="20" maxlength="150"
+                    placeholder="Describe tu duda o publicación (entre 20 y 150 caracteres)…"></textarea>
+          <span class="contador-caracteres" id="contador-caracteres">0 / 150</span>
+        </div>
+
+        <div class="campo">
+          <label for="input-imagen">Imagen (opcional, solo .png)</label>
+          <input type="file" id="input-imagen" accept=".png,image/png">
+          <span class="ayuda-campo" id="imagen-ayuda"></span>
         </div>
 
         <div class="form-actions">

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Publicación - ForoCDS</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="foro.css">
+<link rel="stylesheet" href="post.css">
+</head>
+<body class="foro-body">
+
+  <header class="foro-header">
+    <span class="foro-brand">ForoCDS</span>
+    <div class="foro-usuario">
+      <span id="saludo-usuario">Hola</span>
+      <button id="btn-logout" class="btn-ghost">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main class="foro-main">
+    <a href="foro.html" class="volver">← Volver al feed</a>
+
+    <section class="card" id="post-detalle">
+      <p class="feed-count">Cargando publicación…</p>
+    </section>
+
+    <section class="card" id="post-resolver-box" hidden>
+      <p>¿Ya te resolvieron la duda?</p>
+      <button class="btn-resolver" id="btn-resolver">Marcar como resuelta</button>
+    </section>
+
+    <section class="card">
+      <h2>Comentarios</h2>
+      <div class="comentarios" id="lista-comentarios"></div>
+
+      <form id="form-comentario" class="form-comentario">
+        <textarea id="input-comentario" rows="3" required placeholder="Escribe una respuesta…"></textarea>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Responder</button>
+        </div>
+        <p id="comentario-error" class="form-error" hidden></p>
+      </form>
+    </section>
+  </main>
+
+  <script src="post.js"></script>
+</body>
+</html>

@@ -3,6 +3,8 @@
 // (revisa localStorage, guardado por app.js al hacer login).
 
 const API = '/api';
+const MIN_CONTENIDO = 20;
+const MAX_CONTENIDO = 150;
 
 const usuarioId = localStorage.getItem('usuarioId');
 const usuarioNombre = localStorage.getItem('usuarioNombre');
@@ -26,6 +28,9 @@ const el = {
   inputCategoria: document.getElementById('input-categoria'),
   inputTitulo: document.getElementById('input-titulo'),
   inputContenido: document.getElementById('input-contenido'),
+  contador: document.getElementById('contador-caracteres'),
+  inputImagen: document.getElementById('input-imagen'),
+  imagenAyuda: document.getElementById('imagen-ayuda'),
   formError: document.getElementById('form-error'),
 };
 
@@ -39,6 +44,8 @@ async function init() {
   el.btnNuevoPost.addEventListener('click', () => toggleFormulario(true));
   el.btnCancelarPost.addEventListener('click', () => toggleFormulario(false));
   el.form.addEventListener('submit', onCrearPost);
+  el.inputContenido.addEventListener('input', actualizarContador);
+  el.inputImagen.addEventListener('change', onSeleccionarImagen);
 
   await cargarCategorias();
   await cargarFeed();
@@ -119,21 +126,27 @@ async function cargarFeed() {
 }
 
 function crearTarjetaPost(post) {
-  const card = document.createElement('article');
+  const card = document.createElement('a');
   card.className = 'post-card';
+  card.href = `post.html?id=${post.id}`;
 
   const fecha = new Date(post.fecha_creacion).toLocaleDateString('es-MX', {
     day: 'numeric', month: 'short', year: 'numeric',
   });
+
+  const badgeClase = post.estado === 'resuelta' ? 'badge-resuelta' : 'badge-pendiente';
+  const badgeTexto = post.estado === 'resuelta' ? 'Resuelta' : 'Pendiente';
 
   card.innerHTML = `
     <div class="post-card-meta">
       <span class="post-card-categoria">${escapeHtml(post.categoria)}</span>
       <span>· ${escapeHtml(post.autor)}</span>
       <span>· ${fecha}</span>
+      <span class="badge-estado ${badgeClase}">${badgeTexto}</span>
     </div>
     <h3>${escapeHtml(post.titulo)}</h3>
-    <p>${escapeHtml(recortar(post.contenido, 220))}</p>
+    <p>${escapeHtml(post.contenido)}</p>
+    ${post.imagen_url ? `<img class="post-card-imagen" src="${post.imagen_url}" alt="Imagen de la publicación">` : ''}
     <div class="post-card-footer">
       ${post.total_comentarios} comentario${post.total_comentarios === 1 ? '' : 's'}
     </div>
@@ -149,26 +162,57 @@ function toggleFormulario(mostrar) {
   el.formError.hidden = true;
   if (mostrar) {
     el.form.reset();
+    actualizarContador();
+    el.imagenAyuda.textContent = '';
     el.inputTitulo.focus();
   }
+}
+
+function actualizarContador() {
+  const longitud = el.inputContenido.value.trim().length;
+  el.contador.textContent = `${longitud} / ${MAX_CONTENIDO}`;
+  const fueraDeRango = longitud > 0 && (longitud < MIN_CONTENIDO || longitud > MAX_CONTENIDO);
+  el.contador.classList.toggle('contador-error', fueraDeRango);
+}
+
+function onSeleccionarImagen() {
+  const archivo = el.inputImagen.files[0];
+  if (!archivo) {
+    el.imagenAyuda.textContent = '';
+    return;
+  }
+  if (archivo.type !== 'image/png') {
+    el.imagenAyuda.textContent = 'Solo se permiten imágenes .png';
+    el.inputImagen.value = '';
+    return;
+  }
+  el.imagenAyuda.textContent = `${archivo.name} (${(archivo.size / 1024 / 1024).toFixed(2)} MB)`;
 }
 
 async function onCrearPost(event) {
   event.preventDefault();
   el.formError.hidden = true;
 
-  const payload = {
-    usuario_id: Number(usuarioId),
-    categoria_id: Number(el.inputCategoria.value),
-    titulo: el.inputTitulo.value.trim(),
-    contenido: el.inputContenido.value.trim(),
-  };
+  const contenido = el.inputContenido.value.trim();
+  if (contenido.length < MIN_CONTENIDO || contenido.length > MAX_CONTENIDO) {
+    el.formError.textContent = `El contenido debe tener entre ${MIN_CONTENIDO} y ${MAX_CONTENIDO} caracteres`;
+    el.formError.hidden = false;
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('usuario_id', usuarioId);
+  formData.append('categoria_id', el.inputCategoria.value);
+  formData.append('titulo', el.inputTitulo.value.trim());
+  formData.append('contenido', contenido);
+  if (el.inputImagen.files[0]) {
+    formData.append('imagen', el.inputImagen.files[0]);
+  }
 
   try {
     const res = await fetch(`${API}/posts`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: formData, // sin Content-Type manual: el navegador arma el boundary del multipart
     });
 
     if (!res.ok) {
@@ -187,10 +231,6 @@ async function onCrearPost(event) {
 // ----------------------------------------------------------
 // Utilidades
 // ----------------------------------------------------------
-function recortar(texto, maxLen) {
-  return texto.length > maxLen ? `${texto.slice(0, maxLen).trim()}…` : texto;
-}
-
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str ?? '';
