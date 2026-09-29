@@ -2,48 +2,47 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Publicación - ForoCDS</title>
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="foro.css">
-<link rel="stylesheet" href="post.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foro CUCEI — Publicación</title>
+<link rel="stylesheet" href="foro-styles.css">
 </head>
-<body class="foro-body">
+<body>
 
-  <header class="foro-header">
-    <span class="foro-brand">ForoCDS</span>
-    <div class="foro-usuario">
-      <span id="saludo-usuario">Hola</span>
-      <button id="btn-logout" class="btn-ghost">Cerrar sesión</button>
-    </div>
-  </header>
+<header class="site-header">
+  <div class="brand">Foro <span>CUCEI</span></div>
+  <div class="header-right">
+    <span id="saludo-usuario" class="saludo"></span>
+    <button id="btn-logout" class="btn-ghost">Cerrar sesión</button>
+  </div>
+</header>
 
-  <main class="foro-main">
-    <a href="foro.html" class="volver">← Volver al feed</a>
+<main class="page page-narrow">
 
-    <section class="card" id="post-detalle">
-      <p class="feed-count">Cargando publicación…</p>
-    </section>
+  <a href="foro.html" class="back">Volver al foro</a>
 
-    <section class="card" id="post-resolver-box" hidden>
-      <p>¿Ya te resolvieron la duda?</p>
-      <button class="btn-resolver" id="btn-resolver">Marcar como resuelta</button>
-    </section>
+  <div id="post-detalle" class="card post-detalle"></div>
 
-    <section class="card">
-      <h2>Comentarios</h2>
-      <div class="comentarios" id="lista-comentarios"></div>
+  <div id="post-resolver-box" class="resolver-box" hidden>
+    <span>¿Ya tienes lo que necesitabas?</span>
+    <button id="btn-resolver" class="btn">Marcar como resuelta</button>
+  </div>
 
-      <form id="form-comentario" class="form-comentario">
-        <textarea id="input-comentario" rows="3" required placeholder="Escribe una respuesta…"></textarea>
-        <div class="form-actions">
-          <button type="submit" class="btn-primary">Responder</button>
-        </div>
-        <p id="comentario-error" class="form-error" hidden></p>
-      </form>
-    </section>
-  </main>
+  <section class="comentarios-section">
+    <h2>Respuestas</h2>
+    <div id="lista-comentarios" class="lista-comentarios"></div>
 
-  <script src="post.js"></script>
+    <form id="form-comentario" class="card comentario-form">
+      <div class="field">
+        <label for="input-comentario">Escribe una respuesta</label>
+        <textarea id="input-comentario" required></textarea>
+      </div>
+      <p id="comentario-error" class="form-error" hidden></p>
+      <button type="submit" class="btn">Responder</button>
+    </form>
+  </section>
+
+</main>
+
+<script src="js/post.js"></script>
 </body>
 </html>

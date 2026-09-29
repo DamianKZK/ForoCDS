@@ -2,77 +2,71 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ForoCDS</title>
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="foro.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foro CUCEI</title>
+<link rel="stylesheet" href="foro-styles.css">
 </head>
-<body class="foro-body">
+<body>
 
-  <header class="foro-header">
-    <span class="foro-brand">ForoCDS</span>
-    <div class="foro-usuario">
-      <span id="saludo-usuario">Hola</span>
-      <button id="btn-logout" class="btn-ghost">Cerrar sesión</button>
+<header class="site-header">
+  <div class="brand">Foro <span>CUCEI</span></div>
+  <div class="header-right">
+    <span id="saludo-usuario" class="saludo"></span>
+    <button id="btn-logout" class="btn-ghost">Cerrar sesión</button>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="feed-top">
+    <div id="categoria-chips" class="chip-row">
+      <button class="chip is-active">Todas</button>
     </div>
-  </header>
+    <button id="btn-nuevo-post" class="btn">Nueva publicación</button>
+  </div>
 
-  <main class="foro-main">
+  <div id="post-form" class="card post-form" hidden>
+    <h2>Nueva publicación</h2>
+    <form id="form-crear-post">
+      <div class="field">
+        <label for="input-categoria">Categoría</label>
+        <select id="input-categoria" required>
+          <option value="" disabled selected>Selecciona una categoría</option>
+        </select>
+      </div>
 
-    <div class="foro-toolbar">
-      <nav class="categoria-chips" id="categoria-chips">
-        <button class="chip is-active" data-categoria-id="">Todas</button>
-        <!-- categorías reales insertadas vía JS -->
-      </nav>
-      <button class="btn-primary" id="btn-nuevo-post">+ Nuevo post</button>
-    </div>
+      <div class="field">
+        <label for="input-titulo">Título</label>
+        <input type="text" id="input-titulo" required>
+      </div>
 
-    <section class="card post-form" id="post-form" hidden>
-      <h2>Nuevo post</h2>
-      <form id="form-crear-post" enctype="multipart/form-data">
-        <div class="campo">
-          <label for="input-categoria">Categoría</label>
-          <select id="input-categoria" required>
-            <option value="" disabled selected>Selecciona una categoría</option>
-          </select>
-        </div>
+      <div class="field">
+        <label for="input-contenido">Contenido</label>
+        <textarea id="input-contenido" required></textarea>
+        <div id="contador-caracteres" class="contador">0 / 150</div>
+      </div>
 
-        <div class="campo">
-          <label for="input-titulo">Título</label>
-          <input type="text" id="input-titulo" maxlength="200" required placeholder="¿De qué quieres hablar?">
-        </div>
+      <div class="field">
+        <label for="input-imagen">Imagen (opcional, solo .png)</label>
+        <input type="file" id="input-imagen" accept="image/png">
+        <div id="imagen-ayuda" class="ayuda"></div>
+      </div>
 
-        <div class="campo">
-          <label for="input-contenido">Contenido</label>
-          <textarea id="input-contenido" rows="4" required minlength="20" maxlength="150"
-                    placeholder="Describe tu duda o publicación (entre 20 y 150 caracteres)…"></textarea>
-          <span class="contador-caracteres" id="contador-caracteres">0 / 150</span>
-        </div>
+      <p id="form-error" class="form-error" hidden></p>
 
-        <div class="campo">
-          <label for="input-imagen">Imagen (opcional, solo .png)</label>
-          <input type="file" id="input-imagen" accept=".png,image/png">
-          <span class="ayuda-campo" id="imagen-ayuda"></span>
-        </div>
+      <div class="form-actions">
+        <button type="submit" class="btn">Publicar</button>
+        <button type="button" id="btn-cancelar-post" class="btn-ghost">Cancelar</button>
+      </div>
+    </form>
+  </div>
 
-        <div class="form-actions">
-          <button type="button" class="btn-ghost" id="btn-cancelar-post">Cancelar</button>
-          <button type="submit" class="btn-primary">Publicar</button>
-        </div>
-        <p id="form-error" class="form-error" hidden></p>
-      </form>
-    </section>
+  <p id="feed-count" class="feed-count"></p>
+  <div id="feed" class="feed"></div>
+  <p id="feed-empty" class="feed-empty" hidden>Aún no hay publicaciones en esta categoría.</p>
 
-    <p class="feed-count" id="feed-count">Cargando publicaciones…</p>
+</main>
 
-    <section class="feed" id="feed"></section>
-
-    <p class="feed-empty" id="feed-empty" hidden>
-      Todavía no hay publicaciones en esta categoría. Sé el primero en escribir algo.
-    </p>
-
-  </main>
-
-  <script src="foro.js"></script>
+<script src="js/foro.js"></script>
 </body>
 </html>
