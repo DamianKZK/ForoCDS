@@ -1,53 +1,61 @@
-const formLogin = document.getElementById('form-login');
-const campoEmail = document.getElementById('campo-email');
-const campoPassword = document.getElementById('campo-password');
-const mensajeEstado = document.getElementById('mensaje-estado');
-const botonRegistro = document.getElementById('registro-boton');
+/* app.js — formulario "Iniciar sesión": POST /api/login y redirección al foro */
+(function () {
+  'use strict';
 
-formLogin.addEventListener('submit', async (evento) =>{
-    evento.preventDefault();
+  document.addEventListener('DOMContentLoaded', function () {
+    // Si ya hay una sesión guardada, entra directo al foro.
+    if (Foro.session.id) {
+      window.location.replace('foro.html');
+      return;
+    }
 
-    const email = campoEmail.value;
-    const password = campoPassword.value;
+    var form = document.getElementById('panel-login');
+    var email = document.getElementById('login-email');
+    var pass = document.getElementById('login-password');
+    var submit = document.getElementById('login-submit');
+    var errorBox = document.getElementById('login-error');
+    var okBox = document.getElementById('login-ok');
 
-    mensajeEstado.textContent = 'Verificando credenciales...';
-    mensajeEstado.style.color = 'black';
-
-    try {
-        //Enviamos los datos al backend usando una petición HTTP POST
-        const respuesta = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-        'Content-Type': 'application/json' //Similar a un diccionario en python, le estamos diciendo al back que el tipo de dato que se le va a mandar es un .json
-        },
-        body: JSON.stringify({ email, password }) // Convertimos el objeto JS a texto plano JSON
+    email.addEventListener('input', function () {
+      var v = email.value.trim();
+      UI.setFieldError(email, v && !UI.isEmail(v) ? 'Escribe un correo válido, por ejemplo nombre@alumnos.udg.mx.' : '');
+      errorBox.textContent = '';
+      okBox.textContent = '';
     });
-    // 5. Convertimos la respuesta que nos regrese el backend a un objeto JavaScript
-    const datos = await respuesta.json();
+    pass.addEventListener('input', function () { errorBox.textContent = ''; okBox.textContent = ''; });
 
-    // 6. Evaluamos el resultado que nos dio el servidor
-    if (respuesta.ok) {
-      // Código HTTP 200 (Éxito)
-        mensajeEstado.textContent = `¡Bienvenido! ${datos.mensaje}`;
-        mensajeEstado.style.color = 'green';
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var emailValue = email.value.trim();
+      if (!UI.isEmail(emailValue)) {
+        UI.setFieldError(email, 'Escribe un correo válido, por ejemplo nombre@alumnos.udg.mx.');
+        email.focus();
+        return;
+      }
+      if (!pass.value) {
+        errorBox.textContent = 'Escribe tu contraseña.';
+        pass.focus();
+        return;
+      }
 
-        // Guardamos la sesión en localStorage para que el foro sepa quién eres
-        localStorage.setItem('usuarioId', datos.usuarioId);
-        localStorage.setItem('usuarioNombre', datos.nombre);
-        localStorage.setItem('usuarioEmail', datos.email);
+      submit.disabled = true;
+      submit.textContent = 'Entrando…';
+      errorBox.textContent = '';
+      okBox.textContent = '';
 
-        setTimeout(() => {
-            window.location.href = 'foro.html';
-        }, 800);
-    } else {
-      // Código HTTP 401, 400, 500, etc. (Fallo)
-        mensajeEstado.textContent = `Error: ${datos.error}`;
-        mensajeEstado.style.color = 'red';
-    }
-    } catch (error) {
-    // Si el servidor está apagado o la red se cayó por completo
-        console.error('Error de conexión:', error);
-        mensajeEstado.textContent = 'No se pudo conectar con el servidor.';
-        mensajeEstado.style.color = 'red';
-    }
-});
+      Foro.request('/api/login', Foro.jsonOptions('POST', { email: emailValue, password: pass.value }))
+        .then(function (data) {
+          if (!data || data.usuarioId === undefined) throw new Error('Respuesta inesperada del servidor.');
+          Foro.session.save(data.usuarioId, data.nombre);
+          window.location.href = 'foro.html';
+        })
+        .catch(function (err) {
+          errorBox.textContent = err.status === 401 || err.status === 400 || err.status === 404
+            ? 'Correo o contraseña incorrectos.'
+            : (err.message || 'No pudimos iniciar sesión. Inténtalo de nuevo.');
+          submit.disabled = false;
+          submit.textContent = 'Entrar al foro';
+        });
+    });
+  });
+})();

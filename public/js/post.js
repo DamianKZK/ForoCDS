@@ -1,175 +1,228 @@
-// public/post.js
-// Página de detalle de un post: contenido completo, imagen, comentarios
-// y botón para que el autor lo marque como resuelto.
+/* post.js — detalle de una publicación (post.html?id=...)
+   Endpoints: GET /api/posts/:id, PUT /api/posts/:id/resolver,
+              POST /api/comentarios, DELETE /api/comentarios/:id */
+(function () {
+  'use strict';
+  if (!Foro.requireSession()) return;
+  Foro.initTopbar();
 
-const API = '/api';
+  var el = Foro.el;
+  var postId = new URLSearchParams(window.location.search).get('id');
 
-const usuarioId = localStorage.getItem('usuarioId');
-const usuarioNombre = localStorage.getItem('usuarioNombre');
+  var $root = document.getElementById('post-root');
+  var $answers = document.getElementById('answers');
+  var $count = document.getElementById('answers-count');
+  var $comments = document.getElementById('comments');
+  var $form = document.getElementById('comment-form');
+  var $body = document.getElementById('c-body');
+  var $submit = document.getElementById('c-submit');
+  var $error = document.getElementById('c-error');
+  var $resolvedNote = document.getElementById('c-resolved');
 
-if (!usuarioId) {
-  window.location.href = 'index.html';
-}
+  var current = null; // { post, comments }
 
-const postId = new URLSearchParams(window.location.search).get('id');
-if (!postId) {
-  window.location.href = 'foro.html';
-}
-
-const el = {
-  saludo: document.getElementById('saludo-usuario'),
-  btnLogout: document.getElementById('btn-logout'),
-  detalle: document.getElementById('post-detalle'),
-  resolverBox: document.getElementById('post-resolver-box'),
-  btnResolver: document.getElementById('btn-resolver'),
-  listaComentarios: document.getElementById('lista-comentarios'),
-  formComentario: document.getElementById('form-comentario'),
-  inputComentario: document.getElementById('input-comentario'),
-  comentarioError: document.getElementById('comentario-error'),
-};
-
-init();
-
-async function init() {
-  el.saludo.textContent = `Hola, ${usuarioNombre || 'usuario'}`;
-  el.btnLogout.addEventListener('click', cerrarSesion);
-  el.formComentario.addEventListener('submit', onCrearComentario);
-  el.btnResolver.addEventListener('click', onMarcarResuelto);
-
-  await cargarPost();
-}
-
-function cerrarSesion() {
-  localStorage.removeItem('usuarioId');
-  localStorage.removeItem('usuarioNombre');
-  localStorage.removeItem('usuarioEmail');
-  window.location.href = 'index.html';
-}
-
-// ----------------------------------------------------------
-// Cargar post + comentarios
-// ----------------------------------------------------------
-async function cargarPost() {
-  try {
-    const res = await fetch(`${API}/posts/${postId}`);
-    if (!res.ok) throw new Error('No se encontró la publicación');
-    const post = await res.json();
-
-    renderPost(post);
-    renderComentarios(post.comentarios);
-
-    // Solo el autor ve el botón, y solo si sigue pendiente
-    if (Number(post.usuario_id) === Number(usuarioId) && post.estado !== 'resuelta') {
-      el.resolverBox.hidden = false;
-    }
-  } catch (error) {
-    console.error(error);
-    el.detalle.innerHTML = '<p class="feed-count">No se pudo cargar la publicación.</p>';
+  /* ---------- Carga ---------- */
+  function showError(title, text, retry) {
+    $answers.hidden = true;
+    $root.setAttribute('aria-busy', 'false');
+    $root.replaceChildren(el('div', { class: 'state-box state-box--solid', role: 'alert' },
+      el('h3', { text: title }),
+      el('p', { text: text }),
+      retry ? el('button', { class: 'btn btn--primary', type: 'button', text: 'Reintentar', onclick: load }) : null
+    ));
   }
-}
 
-function renderPost(post) {
-  const fecha = new Date(post.fecha_creacion).toLocaleDateString('es-MX', {
-    day: 'numeric', month: 'short', year: 'numeric',
+  function load() {
+    if (!postId) {
+      showError('No encontramos esta publicación', 'El enlace no incluye un identificador válido.', false);
+      return;
+    }
+    $root.setAttribute('aria-busy', 'true');
+    $root.replaceChildren(el('div', { class: 'skeleton', style: 'height:360px' }));
+
+    Promise.all([
+      Foro.request('/api/posts/' + encodeURIComponent(postId)),
+      Foro.request('/api/categorias').catch(function () { return []; })
+    ]).then(function (res) {
+      var data = res[0] || {};
+      var cats = (Array.isArray(res[1]) ? res[1] : []).map(Foro.normalizeCategory);
+      var rawPost = data.post || data;
+      var rawComments = data.comentarios || rawPost.comentarios || [];
+      current = {
+        post: Foro.normalizePost(rawPost, cats),
+        comments: (Array.isArray(rawComments) ? rawComments : []).map(Foro.normalizeComment)
+      };
+      document.title = current.post.titulo + ' · Foro CUCEI';
+      render();
+    }).catch(function (err) {
+      if (err.status === 404) showError('No encontramos esta publicación', 'Puede que se haya eliminado.', false);
+      else showError('No pudimos cargar la publicación', 'Revisa tu conexión e inténtalo de nuevo.', true);
+    });
+  }
+
+  /* ---------- Render ---------- */
+  function categoryPill(name) {
+    var s = Foro.slug(name);
+    return el('span', { class: 'pill' + (s === 'dudas' || s === 'tramites' ? ' pill--' + s : ''), text: name });
+  }
+
+  function renderArticle() {
+    var p = current.post;
+    var isAuthor = String(p.usuarioId) === String(Foro.session.id);
+
+    var parts = [];
+    if (p.resuelta) {
+      parts.push(el('div', { class: 'article__banner', role: 'status' }, Foro.icon('checkLg'), 'Este post ya está resuelto'));
+    }
+
+    var body = [
+      el('div', { class: 'article__top' },
+        categoryPill(p.categoria),
+        el('span', { class: 'pill ' + (p.resuelta ? 'pill--res' : 'pill--pend'), text: p.resuelta ? 'Resuelta' : 'Pendiente' })
+      ),
+      el('h1', { text: p.titulo }),
+      el('div', { class: 'article__meta' },
+        el('span', { class: 'avatar avatar--lg', text: Foro.initial(p.autor) }),
+        el('span', { text: p.autor + ' · ' + Foro.timeAgo(p.fecha) + ' · ' + Foro.plural(p.vistas, 'vista', 'vistas') })
+      ),
+      el('p', { class: 'article__text', text: p.contenido })
+    ];
+
+    var img = Foro.imageUrl(p.imagen);
+    if (img) body.push(el('img', { class: 'article__img', src: img, alt: 'Imagen de la publicación', loading: 'lazy' }));
+
+    var hint = p.resuelta
+      ? (isAuthor ? 'Marcaste este post como resuelto.' : 'El autor marcó este post como resuelto.')
+      : (isAuthor ? 'Solo tú, como autor, decides si tu duda ya quedó resuelta.' : 'Solo quien publicó la duda decide si quedó resuelta.');
+    var panel = [el('p', { text: hint })];
+    if (isAuthor && !p.resuelta) {
+      var btn = el('button', { class: 'btn btn--primary', type: 'button', text: 'Marcar como resuelto' });
+      btn.addEventListener('click', function () {
+        btn.disabled = true;
+        btn.textContent = 'Guardando…';
+        Foro.request('/api/posts/' + encodeURIComponent(p.id) + '/resolver',
+          Foro.jsonOptions('PUT', { usuario_id: Foro.session.id }))
+          .then(load)
+          .catch(function (err) {
+            btn.disabled = false;
+            btn.textContent = 'Marcar como resuelto';
+            window.alert(err.message || 'No pudimos marcar el post como resuelto.');
+          });
+      });
+      panel.push(btn);
+    }
+    body.push(el('div', { class: 'resolve-panel' }, panel));
+
+    parts.push(el('div', { class: 'article__body' }, body));
+    $root.setAttribute('aria-busy', 'false');
+    $root.replaceChildren(el('article', { class: 'article' + (p.resuelta ? ' is-resolved' : '') }, parts));
+  }
+
+  function commentTime(c) {
+    var d = Foro.parseDate(c.fecha);
+    return d ? d.getTime() : 0;
+  }
+
+  function commentCard(c) {
+    var p = current.post;
+    var mine = String(c.usuarioId) === String(Foro.session.id);
+    var who = [el('b', { text: c.autor })];
+
+    if (c.oficial) who.push(el('span', { class: 'pill pill--staff' }, Foro.icon('check'), c.rolLabel + ' · Respuesta oficial'));
+    else who.push(el('span', { class: 'pill pill--outline', text: 'Estudiante' }));
+    if (String(c.usuarioId) === String(p.usuarioId)) who.push(el('span', { class: 'pill pill--author', text: 'Autor' }));
+    who.push(el('span', { text: '· ' + Foro.timeAgo(c.fecha) }));
+
+    var actions = el('div');
+    function showDelete() {
+      var del = el('button', { class: 'link-danger', type: 'button', text: 'Eliminar' });
+      del.addEventListener('click', showConfirm);
+      actions.replaceChildren(del);
+    }
+    function showConfirm() {
+      var no = el('button', { class: 'btn-no', type: 'button', text: 'Cancelar' });
+      var yes = el('button', { class: 'btn-yes', type: 'button', text: 'Sí, eliminar' });
+      no.addEventListener('click', showDelete);
+      yes.addEventListener('click', function () {
+        yes.disabled = true;
+        Foro.request(Foro.CONFIG.deleteCommentUrl(c.id),
+          Foro.jsonOptions('DELETE', { usuario_id: Foro.session.id }))
+          .then(load)
+          .catch(function (err) {
+            yes.disabled = false;
+            window.alert(err.message || 'No pudimos eliminar el comentario.');
+          });
+      });
+      actions.replaceChildren(el('div', { class: 'confirm', role: 'alertdialog', 'aria-label': 'Confirmar eliminación' },
+        el('span', { text: '¿Eliminar este comentario?' }), no, yes));
+      no.focus();
+    }
+    if (mine) showDelete();
+
+    return el('div', { class: 'comment' + (c.oficial ? ' comment--staff' : '') },
+      el('span', { class: 'avatar', text: Foro.initial(c.autor) }),
+      el('div', { class: 'comment__main' },
+        el('div', { class: 'comment__head' }, el('div', { class: 'comment__who' }, who), actions),
+        el('p', { class: 'comment__text', text: c.contenido })
+      )
+    );
+  }
+
+  function renderComments() {
+    var list = current.comments.slice().sort(function (a, b) {
+      if (a.oficial !== b.oficial) return a.oficial ? -1 : 1;
+      return (commentTime(a) - commentTime(b)) || (Number(a.id) - Number(b.id));
+    });
+    $count.textContent = String(list.length);
+    $answers.hidden = false;
+    $resolvedNote.hidden = !current.post.resuelta;
+
+    if (!list.length) {
+      $comments.replaceChildren(el('div', { class: 'state-box' },
+        el('h3', { text: 'Aún no hay respuestas' }),
+        el('p', { text: 'Sé la primera persona en responder.' })
+      ));
+      return;
+    }
+    $comments.replaceChildren.apply($comments, list.map(commentCard));
+  }
+
+  function render() {
+    renderArticle();
+    renderComments();
+  }
+
+  /* ---------- Nueva respuesta ---------- */
+  $body.addEventListener('input', function () {
+    $error.textContent = '';
+    $submit.disabled = $body.value.trim().length === 0;
   });
-  const badgeClase = post.estado === 'resuelta' ? 'badge-resuelta' : 'badge-pendiente';
-  const badgeTexto = post.estado === 'resuelta' ? 'Resuelta' : 'Pendiente';
 
-  el.detalle.innerHTML = `
-    <div class="post-card-meta">
-      <span class="post-card-categoria">${escapeHtml(post.categoria)}</span>
-      <span>· ${escapeHtml(post.autor)}</span>
-      <span>· ${fecha}</span>
-      <span class="badge-estado ${badgeClase}" id="badge-estado">${badgeTexto}</span>
-    </div>
-    <h1>${escapeHtml(post.titulo)}</h1>
-    <p class="post-contenido">${escapeHtml(post.contenido)}</p>
-    ${post.imagen_url ? `<img src="${post.imagen_url}" alt="Imagen de la publicación">` : ''}
-  `;
-}
+  $form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var text = $body.value.trim();
+    if (!text || !current) return;
+    $submit.disabled = true;
+    $submit.textContent = 'Enviando…';
+    $error.textContent = '';
 
-function renderComentarios(comentarios) {
-  if (!comentarios || comentarios.length === 0) {
-    el.listaComentarios.innerHTML = '<p class="comentarios-vacio">Todavía no hay respuestas. Sé el primero en ayudar.</p>';
-    return;
-  }
+    Foro.request('/api/comentarios', Foro.jsonOptions('POST', {
+      post_id: current.post.id,
+      usuario_id: Foro.session.id,
+      contenido: text
+    }))
+      .then(function () {
+        $body.value = '';
+        return load();
+      })
+      .catch(function (err) {
+        $error.textContent = err.message || 'No pudimos enviar tu respuesta. Inténtalo de nuevo.';
+      })
+      .then(function () {
+        $submit.textContent = 'Responder';
+        $submit.disabled = $body.value.trim().length === 0;
+      });
+  });
 
-  el.listaComentarios.innerHTML = comentarios.map((c) => {
-    const fecha = new Date(c.fecha_creacion).toLocaleDateString('es-MX', {
-      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-    });
-    return `
-      <div class="comentario">
-        <div class="comentario-meta">${escapeHtml(c.autor)} · ${fecha}</div>
-        <p>${escapeHtml(c.contenido)}</p>
-      </div>
-    `;
-  }).join('');
-}
-
-// ----------------------------------------------------------
-// Crear comentario
-// ----------------------------------------------------------
-async function onCrearComentario(event) {
-  event.preventDefault();
-  el.comentarioError.hidden = true;
-
-  const contenido = el.inputComentario.value.trim();
-  if (!contenido) return;
-
-  try {
-    const res = await fetch(`${API}/comentarios`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ post_id: Number(postId), usuario_id: Number(usuarioId), contenido }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || 'No se pudo publicar el comentario');
-    }
-
-    el.inputComentario.value = '';
-    await cargarPost();
-  } catch (error) {
-    el.comentarioError.textContent = error.message;
-    el.comentarioError.hidden = false;
-  }
-}
-
-// ----------------------------------------------------------
-// Marcar como resuelto
-// ----------------------------------------------------------
-async function onMarcarResuelto() {
-  el.btnResolver.disabled = true;
-  el.btnResolver.textContent = 'Marcando...';
-
-  try {
-    const res = await fetch(`${API}/posts/${postId}/resolver`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario_id: Number(usuarioId) }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || 'No se pudo marcar como resuelto');
-    }
-
-    el.resolverBox.hidden = true;
-    await cargarPost();
-  } catch (error) {
-    alert(error.message);
-    el.btnResolver.disabled = false;
-    el.btnResolver.textContent = 'Marcar como resuelta';
-  }
-}
-
-// ----------------------------------------------------------
-// Utilidades
-// ----------------------------------------------------------
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str ?? '';
-  return div.innerHTML;
-}
+  load();
+})();

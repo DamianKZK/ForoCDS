@@ -1,17 +1,37 @@
-function setMode(mode) {
-  const isRegister = mode === 'register';
-  document.getElementById('tabLogin').classList.toggle('active', !isRegister);
-  document.getElementById('tabRegister').classList.toggle('active', isRegister);
-  document.getElementById('tabIndicator').style.transform = isRegister ? 'translateX(100%)' : 'translateX(0)';
-  document.getElementById('tabPanels').style.transform = isRegister ? 'translateX(-50%)' : 'translateX(0)';
-  adjustPanelsHeight();
-}
+/* tabs.js — cambia entre "Iniciar sesión" y "Crear cuenta" con animación de deslizamiento. */
+(function () {
+  'use strict';
 
-function adjustPanelsHeight() {
-  const isRegister = document.getElementById('tabRegister').classList.contains('active');
-  const activo = document.getElementById(isRegister ? 'panelRegister' : 'panelLogin');
-  document.getElementById('panelsOuter').style.height = activo.offsetHeight + 'px';
-}
+  document.addEventListener('DOMContentLoaded', function () {
+    var track = document.getElementById('auth-track');
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.tabs-pill [role="tab"]'));
+    var panels = Array.prototype.slice.call(document.querySelectorAll('.auth-panel'));
+    if (!track || !tabs.length) return;
 
-window.addEventListener('load', adjustPanelsHeight);
-window.addEventListener('resize', adjustPanelsHeight);
+    function select(name, focus) {
+      track.setAttribute('data-active', name);
+      tabs.forEach(function (tab) {
+        var on = tab.getAttribute('data-tab') === name;
+        tab.setAttribute('aria-selected', String(on));
+        tab.tabIndex = on ? 0 : -1;
+        if (on && focus) tab.focus();
+      });
+      panels.forEach(function (panel) {
+        var on = panel.getAttribute('data-panel') === name;
+        if (on) panel.removeAttribute('inert');
+        else panel.setAttribute('inert', '');
+      });
+    }
+
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () { select(tab.getAttribute('data-tab')); });
+      tab.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        var next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        select(next.getAttribute('data-tab'), true);
+      });
+    });
+
+    window.AuthTabs = { select: select };
+  });
+})();
