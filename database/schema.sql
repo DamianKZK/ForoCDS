@@ -42,13 +42,16 @@ CREATE TABLE IF NOT EXISTS posts (
   usuario_id INT NOT NULL,
   categoria_id INT NOT NULL,
   titulo VARCHAR(200) NOT NULL,
-  contenido TEXT NOT NULL,
+  contenido VARCHAR(150) NOT NULL,
+  imagen_url VARCHAR(255) DEFAULT NULL,
+  estado ENUM('pendiente', 'resuelta') NOT NULL DEFAULT 'pendiente',
   fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   vistas INT NOT NULL DEFAULT 0,
   cerrado BOOLEAN NOT NULL DEFAULT FALSE,
   CONSTRAINT fk_posts_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-  CONSTRAINT fk_posts_categoria FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE RESTRICT
+  CONSTRAINT fk_posts_categoria FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE RESTRICT,
+  CONSTRAINT chk_posts_contenido_longitud CHECK (CHAR_LENGTH(contenido) BETWEEN 20 AND 150)
 ) ENGINE=InnoDB;
 
 -- ============================================
@@ -95,6 +98,7 @@ CREATE INDEX idx_comentarios_post ON comentarios(post_id);
 -- Datos semilla (opcional, para pruebas)
 -- ============================================
 INSERT INTO categorias (nombre, descripcion) VALUES
-  ('General', 'Discusiones generales del curso'),
-  ('Ayuda / Dudas', 'Preguntas técnicas y dudas del proyecto'),
-  ('Anuncios', 'Anuncios oficiales de la materia');
+  ('Anuncios', 'Avisos oficiales de la materia'),
+  ('Trámites', 'Dudas y procesos administrativos'),
+  ('Información Académica', 'Fechas, temario y contenido del curso'),
+  ('Otro', 'Cualquier otro tema relacionado con el curso');
