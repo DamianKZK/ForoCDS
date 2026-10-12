@@ -1,82 +1,130 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Preguntas Frecuentes</title>
-<link rel="stylesheet" href="foro-styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preguntas Frecuentes — Foro CUCEI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+  <link rel="stylesheet" href="foro-styles.css?v=3">
+  <script src="js/theme.js?v=3"></script>
 </head>
-<body>S
+<body>
 
-<div class="faq-container">
-    <!-- Botón de regresar -->
-    <button id="btnVolver" class="btn-volver">← Volver</button>
-    <h2>Preguntas Frecuentes</h2>
+  <!-- Encabezado / Topbar -->
+  <header class="topbar">
+    <div class="topbar__in">
+      <a class="brand" href="foro.html">
+        <span class="brand__logo">
+          <img class="brand__img brand__img--light" src="img/logo-claro.svg" alt="">
+          <img class="brand__img brand__img--dark" src="img/logo-oscuro.svg" alt="">
+        </span>
+        <span class="brand__text">
+          <span class="brand__name">Foro <span class="brand__cu">CUCEI</span></span>
+          <span class="brand__sub">COMUNIDAD ESTUDIANTIL</span>
+        </span>
+      </a>
+
+      <div class="topbar__right">
+        <button class="iconbtn" type="button" data-theme-toggle aria-label="Cambiar entre tema claro y oscuro">
+          <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="post-main">
     
-    <!-- Campo de búsqueda -->
-    <input 
-    type="text" 
-    id="faqSearch" 
-    placeholder="Buscar una pregunta o palabra clave..." 
-    >
+    <button id="btnVolver" class="back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Volver al Foro
+    </button>
 
-    <!-- Mensaje cuando no hay coincidencias -->
-    <p id="noResults" class="no-results">
-    No se encontraron preguntas que coincidan con tu búsqueda.
+    <section class="hero">
+      <span class="hero__eyebrow">AYUDA Y SOPORTE</span>
+      <h1>Preguntas Frecuentes</h1>
+      <p>Encuentra respuestas rápidas a las dudas más comunes sobre trámites, accesos y la comunidad de CUCEI.</p>
+    </section>
+
+    <!-- Buscador -->
+    <div class="field" style="margin-top: 1rem;">
+      <label for="faqSearch">Buscar pregunta</label>
+      <input 
+        type="search" 
+        id="faqSearch" 
+        class="input"
+        placeholder="Buscar una pregunta o palabra clave..." 
+        autocomplete="off"
+      >
+    </div>
+
+    <!-- Mensaje sin resultados -->
+    <p id="noResults" class="state-box" style="display: none;">
+      No se encontraron preguntas que coincidan con tu búsqueda.
     </p>
 
-    <!-- Lista de preguntas frecuentes -->
-    <div id="faqList" class="faq-list">
-    
-    <details class="faq-item">
+    <!-- Lista de preguntas -->
+    <div id="faqList" class="answers">
+
+      <details class="faq-item">
         <summary class="faq-pregunta">¿En dónde puedo sacar una constancia de estudio?</summary>
         <div class="faq-respuesta">
-        <p>Ingresa a la plataforma SIATCE - Control Escolar CUCEI y sigue los siguientes pasos:
-            • Inicia sesión: Entra a SIATCE con tus datos de estudiante. Si es tu primera vez, crea una cuenta en "Usuario Nuevo".<br>
-            • Selecciona el trámite: Busca en el menú de la izquierda el apartado de constancias y elige el tipo que necesitas (simple, con calificaciones, para becas, etc.).<br>
-            • Genera tu pago: Descarga o imprime la orden de pago generada por el sistema y realiza el pago correspondiente.<br>
-            • Confirma la solicitud: Envía tu comprobante de pago junto con tus datos al correo institucional indicado por Control Escolar (uatencion@cucei.udg.mx o el específico de tu trámite en la plataforma).<br>
-            • Recoge tu documento: Espera el tiempo de respuesta señalado en el sistema y verifica el estatus. Una vez listo, podrás solicitar el envío digital/paquetería o acudir directamente a ventanilla.
-        </p>
+          <p>Ingresa a la plataforma SIATCE - Control Escolar CUCEI y sigue los siguientes pasos:</p>
+          <ul>
+            <li><b>Inicia sesión:</b> Entra a SIATCE con tus datos de estudiante. Si es tu primera vez, crea una cuenta en "Usuario Nuevo".</li>
+            <li><b>Selecciona el trámite:</b> Busca en el menú de la izquierda el apartado de constancias y elige el tipo que necesitas (simple, con calificaciones, para becas, etc.).</li>
+            <li><b>Genera tu pago:</b> Descarga o imprime la orden de pago generada por el sistema y realiza el pago correspondiente.</li>
+            <li><b>Confirma la solicitud:</b> Envía tu comprobante de pago junto con tus datos al correo institucional indicado por Control Escolar (<code>uatencion@cucei.udg.mx</code> o el específico de tu trámite).</li>
+            <li><b>Recoge tu documento:</b> Espera el tiempo de respuesta señalado en el sistema y verifica el estatus. Una vez listo, podrás solicitar el envío digital/paquetería o acudir directamente a ventanilla.</li>
+          </ul>
         </div>
-    </details>
+      </details>
 
-    <details class="faq-item">
-        <summary class="faq-pregunta">¿Cual es el estacionamiento para estudiantes?</summary>
+      <details class="faq-item">
+        <summary class="faq-pregunta">¿Cuál es el estacionamiento para estudiantes?</summary>
         <div class="faq-respuesta">
-        <p>Al ser estudiante puedes acceder al estacionamiento que se encuentra en Av. Olimpica, registrandote previamente en el sistema oficial de Reconocimiento Facial Cucei.</p>
+          <p>Al ser estudiante puedes acceder al estacionamiento que se encuentra en Av. Olímpica, registrándote previamente en el sistema oficial de Reconocimiento Facial CUCEI.</p>
         </div>
-    </details>
+      </details>
 
-    <details class="faq-item">
+      <details class="faq-item">
         <summary class="faq-pregunta">He sido acosado/discriminado en CUCEI, ¿A dónde puedo acudir?</summary>
         <div class="faq-respuesta">
-        <p>Se puede acudir a la Unidad de Primer Contacto del CUCEI cuando se vive o se es testigo de cualquier situación de violencia de género, acoso, hostigamiento o discriminación dentro de la institución.</p>
+          <p>Se puede acudir a la Unidad de Primer Contacto del CUCEI cuando se vive o se es testigo de cualquier situación de violencia de género, acoso, hostigamiento o discriminación dentro de la institución.</p>
         </div>
-    </details>
+      </details>
 
-    <details class="faq-item">
-        <summary class="faq-pregunta">¿Que apoyo se recibe en primer contacto?</summary>
+      <details class="faq-item">
+        <summary class="faq-pregunta">¿Qué apoyo se recibe en primer contacto?</summary>
         <div class="faq-respuesta">
-        <p>• Atención y contención emocional inicial en un espacio seguro y confidencial.<br>
-            • Orientación y acompañamiento médico, psicológico o legal.<br>
-            • Recepción de denuncias y canalización oficial ante las autoridades competentes de la Universidad de Guadalajara (UdeG).</p>
+          <ul>
+            <li>Atención y contención emocional inicial en un espacio seguro y confidencial.</li>
+            <li>Orientación y acompañamiento médico, psicológico o legal.</li>
+            <li>Recepción de denuncias y canalización oficial ante las autoridades competentes de la Universidad de Guadalajara (UdeG).</li>
+          </ul>
         </div>
-    </details>
+      </details>
 
-    <details class="faq-item">
-        <summary class="faq-pregunta">¿Donde encuentro la unidad de primer contacto?</summary>
+      <details class="faq-item">
+        <summary class="faq-pregunta">¿Dónde encuentro la unidad de primer contacto?</summary>
         <div class="faq-respuesta">
-        <p>• Ubicación: Módulo A, planta baja / segundo patio (frente a Control Escolar).<br>
-            • Horario: Lunes a viernes de 8:00 a 18:00 horas.<br>
-            • Teléfono: 33 1378 5900, extensión 27800.<br>
-            • Correo electrónico: primercontacto.bvr@cucei.udg.mx o primercontacto@cucei.udg.mx.</p>
+          <ul>
+            <li><b>Ubicación:</b> Módulo A, planta baja / segundo patio (frente a Control Escolar).</li>
+            <li><b>Horario:</b> Lunes a viernes de 8:00 a 18:00 horas.</li>
+            <li><b>Teléfono:</b> 33 1378 5900, extensión 27800.</li>
+            <li><b>Correo electrónico:</b> <code>primercontacto.bvr@cucei.udg.mx</code> o <code>primercontacto@cucei.udg.mx</code>.</li>
+          </ul>
         </div>
-    </details>
+      </details>
 
     </div>
-</div>
+  </main>
 
-<script src="js/faq.js"></script>
+  <script src="js/ui.js?v=3"></script>
+  <script src="js/faq.js?v=3"></script>
 </body>
 </html>
