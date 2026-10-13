@@ -467,6 +467,20 @@ textarea.input { height: auto; padding: 14px 16px; line-height: 1.5; resize: ver
   .brand__sub { display: none; }
 }
 
+/*Color de las publicaciones destacadas Uly<3*/
+.post-card--destacado { box-shadow: inset 4px 0 0 #f59e0b; }
+
+/* ---------- Panel de administración ---------- */
+.user-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 18px 20px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+}
+.user-row__info { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.user-row__info b { overflow-wrap: anywhere; }
+.user-row__info span { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.user-row__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.user-row__actions select.input { width: auto; height: 44px; }
+.btn--sm { height: 44px; padding: 0 20px; font-size: 15px; }
 /* ==========================================================================
    Movimiento y transiciones
    ========================================================================== */

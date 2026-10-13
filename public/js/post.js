@@ -66,6 +66,56 @@
     return el('span', { class: 'pill' + (s === 'dudas' || s === 'tramites' ? ' pill--' + s : ''), text: name });
   }
 
+  // Etiqueta verde con el cargo (Comité / Coordinador) junto al nombre.
+  function cargoBadge(cargo) {
+    var label = Foro.CONFIG.CARGO_LABEL[cargo];
+    return label ? el('span', { class: 'pill pill--staff', text: label }) : null;
+  }
+
+  // Botones de moderación: destacar (solo admin) y eliminar (admin o dueño del post).
+  function adminPanel(p, isAuthor) {
+    var isAdmin = Foro.session.isAdmin;
+    if (!isAdmin && !isAuthor) return null;
+    var buttons = [];
+
+    if (isAdmin) {
+      var fav = el('button', {
+        class: 'btn btn--primary',
+        type: 'button',
+        text: p.destacado ? 'Quitar destacado' : 'Destacar post'
+      });
+      fav.addEventListener('click', function () {
+        fav.disabled = true;
+        var accion = p.destacado ? 'quitar-destacado' : 'destacar';
+        Foro.request('/api/posts/' + encodeURIComponent(p.id) + '/' + accion, { method: 'PUT' })
+          .then(load)
+          .catch(function (err) {
+            fav.disabled = false;
+            window.alert(err.message || 'No pudimos cambiar el destacado.');
+          });
+      });
+      buttons.push(fav);
+    }
+
+    var del = el('button', { class: 'link-danger', type: 'button', text: 'Eliminar post' });
+    del.addEventListener('click', function () {
+      if (!window.confirm('¿Eliminar este post? Dejará de verse en el foro.')) return;
+      del.disabled = true;
+      Foro.request('/api/posts/' + encodeURIComponent(p.id), { method: 'DELETE' })
+        .then(function () { window.location.href = 'foro.html'; })
+        .catch(function (err) {
+          del.disabled = false;
+          window.alert(err.message || 'No pudimos eliminar el post.');
+        });
+    });
+    buttons.push(del);
+
+    return el('div', { class: 'resolve-panel' },
+      el('p', { text: isAdmin ? 'Opciones de administración' : 'Opciones de tu publicación' }),
+      buttons
+    );
+  }
+
   function renderArticle() {
     var p = current.post;
     var isAuthor = String(p.usuarioId) === String(Foro.session.id);
@@ -78,12 +128,15 @@
     var body = [
       el('div', { class: 'article__top' },
         categoryPill(p.categoria),
+        p.destacado ? el('span', { class: 'pill', text: 'Destacado' }) : null,
         el('span', { class: 'pill ' + (p.resuelta ? 'pill--res' : 'pill--pend'), text: p.resuelta ? 'Resuelta' : 'Pendiente' })
       ),
       el('h1', { text: p.titulo }),
       el('div', { class: 'article__meta' },
         el('span', { class: 'avatar avatar--lg', text: Foro.initial(p.autor) }),
-        el('span', { text: p.autor + ' · ' + Foro.timeAgo(p.fecha) + ' · ' + Foro.plural(p.vistas, 'vista', 'vistas') })
+        el('span', { text: p.autor }),
+        cargoBadge(p.autorCargo),
+        el('span', { text: '· ' + Foro.timeAgo(p.fecha) + ' · ' + Foro.plural(p.vistas, 'vista', 'vistas') })
       ),
       el('p', { class: 'article__text', text: p.contenido })
     ];
@@ -112,6 +165,7 @@
       panel.push(btn);
     }
     body.push(el('div', { class: 'resolve-panel' }, panel));
+    body.push(adminPanel(p, isAuthor));
 
     parts.push(el('div', { class: 'article__body' }, body));
     $root.setAttribute('aria-busy', 'false');
@@ -157,7 +211,7 @@
         el('span', { text: '¿Eliminar este comentario?' }), no, yes));
       no.focus();
     }
-    if (mine) showDelete();
+    if (mine || Foro.session.isAdmin) showDelete();
 
     return el('div', { class: 'comment' + (c.oficial ? ' comment--staff' : '') },
       el('span', { class: 'avatar', text: Foro.initial(c.autor) }),

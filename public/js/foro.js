@@ -68,13 +68,14 @@
     var me = String(Foro.session.id);
     var list = state.posts.filter(function (p) {
       if (state.scope === 'mios' && String(p.usuarioId) !== me) return false;
-      if (state.cat !== 'Todas' && p.categoria !== state.cat) return false;
+      if (state.cat !== 'Todas' && p.categoria !== state.cat && !p.destacado) return false;
       if (state.tab === 'sin_resolver' && p.resuelta) return false;
       if (state.tab === 'resueltos' && !p.resuelta) return false;
       if (q && (p.titulo + ' ' + p.contenido).toLowerCase().indexOf(q) === -1) return false;
       return true;
     });
     list.sort(function (a, b) {
+      if (a.destacado !== b.destacado) return a.destacado ? -1 : 1;
       if (state.tab === 'populares') return (b.vistas - a.vistas) || (time(b) - time(a));
       return (time(b) - time(a)) || (Number(b.id) - Number(a.id));
     });
@@ -128,6 +129,11 @@
     return el('span', { class: cls, text: name });
   }
 
+  function cargoBadge(cargo) {
+    var label = Foro.CONFIG.CARGO_LABEL[cargo];
+    return label ? el('span', { class: 'pill pill--staff', style: 'margin-left:6px', text: label }) : null;
+  }
+
   function postCard(p) {
     var foot = [categoryPill(p.categoria), el('span', { class: 'post-card__spacer' })];
     if (p.comentarios !== null) {
@@ -135,12 +141,19 @@
     }
     foot.push(el('span', { class: 'stat', title: 'Vistas' }, Foro.icon('eye'), String(p.vistas)));
 
-    return el('a', { class: 'post-card', href: 'post.html?id=' + encodeURIComponent(p.id) },
+    return el('a', { class: 'post-card' + (p.destacado ? ' post-card--destacado' : ''), href: 'post.html?id=' + encodeURIComponent(p.id) },
       el('span', { class: 'avatar avatar--md', text: Foro.initial(p.autor) }),
       el('div', { class: 'post-card__body' },
         el('div', { class: 'post-card__top' },
-          el('span', { class: 'post-card__who' }, el('b', { text: p.autor }), ' · ' + Foro.timeAgo(p.fecha)),
-          el('span', { class: 'pill ' + (p.resuelta ? 'pill--res' : 'pill--pend'), text: p.resuelta ? 'Resuelta' : 'Pendiente' })
+          el('span', { class: 'post-card__who' },
+            el('b', { text: p.autor }),
+            cargoBadge(p.autorCargo),
+            ' · ' + Foro.timeAgo(p.fecha)
+          ),
+          el('span', { style: 'display:inline-flex;gap:8px;align-items:center' },
+            p.destacado ? el('span', { class: 'pill', text: '📌 Destacado' }) : null,
+            el('span', { class: 'pill ' + (p.resuelta ? 'pill--res' : 'pill--pend'), text: p.resuelta ? 'Resuelta' : 'Pendiente' })
+          )
         ),
         el('h3', { text: p.titulo }),
         el('p', { text: p.contenido }),

@@ -46,7 +46,11 @@
       Foro.request('/api/login', Foro.jsonOptions('POST', { email: emailValue, password: pass.value }))
         .then(function (data) {
           if (!data || data.usuarioId === undefined) throw new Error('Respuesta inesperada del servidor.');
-          Foro.session.save(data.usuarioId, data.nombre);
+            Foro.session.save(data.usuarioId, data.nombre, {
+            token: data.token,
+            rol: data.rol,
+            cargo: data.cargo
+          });
           window.location.href = 'foro.html';
         })
         .catch(function (err) {

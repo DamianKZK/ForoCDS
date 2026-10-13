@@ -13,8 +13,13 @@
     // Claves de localStorage donde se guarda la "sesión" actual.
     STORAGE_ID: 'usuarioId',
     STORAGE_NAME: 'nombre',
+    STORAGE_TOKEN: 'token',
+    STORAGE_ROL: 'rol',
+    STORAGE_CARGO: 'cargo',
     // Etiqueta que se muestra para cada rol de la tabla usuarios (los 'usuario' no llevan etiqueta).
     ROL_LABEL: { moderador: 'Comité', admin: 'Administración' },
+    // Etiqueta que se muestra junto al nombre según el cargo.
+    CARGO_LABEL: { comite: 'Comité', coordinador: 'Coordinador' },
     // Ruta para borrar un comentario.
     deleteCommentUrl: function (id) { return '/api/comentarios/' + encodeURIComponent(id); }
   };
@@ -23,20 +28,32 @@
   function store(key) {
     try { return localStorage.getItem(key); } catch (e) { return null; }
   }
+
   var session = {
     get id() { return store(CONFIG.STORAGE_ID); },
     get nombre() { return store(CONFIG.STORAGE_NAME) || 'Usuario'; },
-    save: function (id, nombre) {
+    get token() { return store(CONFIG.STORAGE_TOKEN); },
+    get rol() { return store(CONFIG.STORAGE_ROL) || 'usuario'; },
+    get cargo() { return store(CONFIG.STORAGE_CARGO); },
+    // Solo sirve para mostrar u ocultar botones. La seguridad real la valida el servidor.
+    get isAdmin() { return this.rol === 'admin'; },
+    save: function (id, nombre, extra) {
+      var e = extra || {};
       try {
         localStorage.setItem(CONFIG.STORAGE_ID, String(id));
         localStorage.setItem(CONFIG.STORAGE_NAME, nombre || '');
-      } catch (e) { /* ignorar */ }
+        localStorage.setItem(CONFIG.STORAGE_TOKEN, e.token || '');
+        localStorage.setItem(CONFIG.STORAGE_ROL, e.rol || 'usuario');
+        localStorage.setItem(CONFIG.STORAGE_CARGO, e.cargo || '');
+      } catch (err) { /* ignorar */ }
     },
     clear: function () {
       try {
-        localStorage.removeItem(CONFIG.STORAGE_ID);
-        localStorage.removeItem(CONFIG.STORAGE_NAME);
-      } catch (e) { /* ignorar */ }
+        [CONFIG.STORAGE_ID, CONFIG.STORAGE_NAME, CONFIG.STORAGE_TOKEN,
+         CONFIG.STORAGE_ROL, CONFIG.STORAGE_CARGO].forEach(function (k) {
+          localStorage.removeItem(k);
+        });
+      } catch (err) { /* ignorar */ }
     }
   };
 
@@ -50,7 +67,11 @@
 
   /* ---------- Llamadas HTTP ---------- */
   function request(path, options) {
-    return fetch(CONFIG.API_BASE + path, options || {}).then(function (res) {
+    var opts = options || {};
+    if (session.token) {
+      opts.headers = Object.assign({}, opts.headers, { Authorization: 'Bearer ' + session.token });
+    }
+    return fetch(CONFIG.API_BASE + path, opts).then(function (res) {
       return res.text().then(function (text) {
         var data = null;
         if (text) {
@@ -109,12 +130,15 @@
       fecha: pick(r.fecha_creacion, r.fecha),
       vistas: toNumber(r.vistas) || 0,
       comentarios: toNumber(comentarios),
-      autor: String(pick(r.autor_nombre, r.usuario_nombre, r.nombre_usuario, r.autor, r.nombre) || 'Usuario')
+      autor: String(pick(r.autor_nombre, r.usuario_nombre, r.nombre_usuario, r.autor, r.nombre) || 'Usuario'),
+      autorRol: String(r.autor_rol || 'usuario').toLowerCase(),
+      autorCargo: r.autor_cargo || null,
+      destacado: Number(r.destacado) === 1
     };
   }
 
   function normalizeComment(r) {
-    var rol = String(pick(r.rol, r.usuario_rol, r.rol_usuario) || 'usuario').toLowerCase();
+    var rol = String(pick(r.rol, r.usuario_rol, r.rol_usuario, r.autor_rol) || 'usuario').toLowerCase();
     return {
       id: r.id,
       usuarioId: pick(r.usuario_id, r.usuarioId),
@@ -123,7 +147,8 @@
       autor: String(pick(r.autor_nombre, r.usuario_nombre, r.nombre_usuario, r.autor, r.nombre) || 'Usuario'),
       rol: rol,
       oficial: rol !== 'usuario' && !!CONFIG.ROL_LABEL[rol],
-      rolLabel: CONFIG.ROL_LABEL[rol] || null
+      cargo: pick(r.autor_cargo, r.cargo),
+      rolLabel: CONFIG.CARGO_LABEL[pick(r.autor_cargo, r.cargo)] || CONFIG.ROL_LABEL[rol] || null
     };
   }
 
@@ -205,6 +230,10 @@
     if (nameEl) nameEl.textContent = session.nombre;
     if (initEl) initEl.textContent = initial(session.nombre);
     if (!btn || !panel) return;
+    // Enlace al panel de administración (solo se muestra a los admins).
+    if (session.isAdmin && logout) {
+      panel.insertBefore(el('a', { class: 'usermenu__item', href: 'admin.html', role: 'menuitem', text: 'Administración' }), logout);
+    }
 
     function close() { panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
     btn.addEventListener('click', function (e) {
