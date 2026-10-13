@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const { pool, testConnection } = require('./src/config/db');
 const errorHandler = require('./src/middlewares/errorHandler');
@@ -42,7 +43,7 @@ app.post('/api/login', async (req, res) => {
 
   try {
     const [filas] = await pool.query(
-      'SELECT id, nombre, email, password_hash FROM usuarios WHERE email = ?',
+      'SELECT id, nombre, email, password_hash, rol, cargo FROM usuarios WHERE email = ?',
       [email]
     );
 
@@ -57,12 +58,17 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Credenciales inválidas.' });
     }
 
+    const token = jwt.sign({ id: usuario.id }, process.env.JWT_SECRET, { expiresIn: '8h' });
+
     return res.json({
       mensaje: `Sesión iniciada correctamente como ${usuario.email}`,
+      token,
       usuarioId: usuario.id,
       nombre: usuario.nombre,
       email: usuario.email,
-    });
+      rol: usuario.rol,
+      cargo: usuario.cargo,
+});
   } catch (error) {
     console.error('Error en la base de datos:', error);
     return res.status(500).json({ error: 'Error del servidor al procesar el login.' });
