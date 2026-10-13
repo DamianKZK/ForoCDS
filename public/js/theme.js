@@ -20,8 +20,11 @@
     buttons.forEach(function (btn) {
       btn.addEventListener('click', function () {
         var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        var root = document.documentElement;
+        root.classList.add('theme-fade');
         apply(next);
         save(next);
+        setTimeout(function () { root.classList.remove('theme-fade'); }, 500);
       });
     });
   });
