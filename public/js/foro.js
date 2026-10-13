@@ -18,6 +18,13 @@
     q: ''
   };
 
+  var animateNext = true; // anima la entrada de tarjetas solo al cargar o cambiar filtros, no al teclear en la búsqueda
+
+  if (window.Motion) {
+    Motion.slider(document.querySelector('.tabs-bar'), '[role="tab"]', 'aria-selected');
+    Motion.slider(document.querySelector('.side-group'), '.side-btn', 'aria-pressed');
+  }
+
   var $feed = document.getElementById('feed');
   var $cats = document.getElementById('cats');
   var $help = document.getElementById('help');
@@ -39,6 +46,7 @@
         state.cats = asList(res[0], 'categorias').map(Foro.normalizeCategory);
         state.posts = asList(res[1], 'posts').map(function (p) { return Foro.normalizePost(p, state.cats); });
         state.status = 'ok';
+        animateNext = true;
         fillCategorySelect();
         render();
       })
@@ -106,7 +114,7 @@
         class: 'side-btn side-btn--cat',
         type: 'button',
         'aria-pressed': String(active),
-        onclick: function () { state.cat = name; render(); }
+        onclick: function () { state.cat = name; animateNext = true; render(); }
       },
         el('span', { class: 'side-btn__dot side-btn__dot--' + (name === 'Todas' ? 'todas' : Foro.slug(name)) }),
         el('span', { class: 'side-btn__label', text: name }),
@@ -173,6 +181,8 @@
     $title.textContent = state.cat === 'Todas' ? (state.scope === 'mios' ? 'Mis posts' : 'Todas las publicaciones') : state.cat;
     $count.textContent = state.status === 'ok' ? Foro.plural(items.length, 'publicación', 'publicaciones').replace('publicaciónes', 'publicaciones') : '';
     $feed.setAttribute('aria-busy', String(state.status === 'loading'));
+    $feed.classList.toggle('feed--enter', animateNext);
+    if (state.status !== 'loading') animateNext = false;
 
     if (state.status === 'loading') {
       $feed.replaceChildren(el('div', { class: 'skeleton' }), el('div', { class: 'skeleton' }), el('div', { class: 'skeleton' }));
@@ -218,10 +228,10 @@
 
   /* ---------- Eventos de filtros ---------- */
   document.querySelectorAll('[data-scope]').forEach(function (btn) {
-    btn.addEventListener('click', function () { state.scope = btn.getAttribute('data-scope'); render(); });
+    btn.addEventListener('click', function () { state.scope = btn.getAttribute('data-scope'); animateNext = true; render(); });
   });
   document.querySelectorAll('.tabs-bar [role="tab"]').forEach(function (tab) {
-    tab.addEventListener('click', function () { state.tab = tab.getAttribute('data-tab'); render(); });
+    tab.addEventListener('click', function () { state.tab = tab.getAttribute('data-tab'); animateNext = true; render(); });
   });
   $search.addEventListener('input', function () { state.q = $search.value; renderFeed(); });
 
