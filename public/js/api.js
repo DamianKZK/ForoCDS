@@ -20,6 +20,9 @@
     ROL_LABEL: { moderador: 'Comité', admin: 'Administración' },
     // Etiqueta que se muestra junto al nombre según el cargo.
     CARGO_LABEL: { comite: 'Comité', coordinador: 'Coordinador' },
+    // Jerarquía de las respuestas oficiales: mayor número = aparece primero.
+    // Para invertir el orden, intercambia los números de comite y coordinador.
+    CARGO_RANK: { coordinador: 3, comite: 2 },
     // Ruta para borrar un comentario.
     deleteCommentUrl: function (id) { return '/api/comentarios/' + encodeURIComponent(id); }
   };
@@ -153,6 +156,7 @@
       rol: rol,
       oficial: rol !== 'usuario' && !!CONFIG.ROL_LABEL[rol],
       cargo: pick(r.autor_cargo, r.cargo),
+      rank: CONFIG.CARGO_RANK[pick(r.autor_cargo, r.cargo)] || (rol !== 'usuario' && !!CONFIG.ROL_LABEL[rol] ? 1 : 0),
       rolLabel: CONFIG.CARGO_LABEL[pick(r.autor_cargo, r.cargo)] || CONFIG.ROL_LABEL[rol] || null
     };
   }

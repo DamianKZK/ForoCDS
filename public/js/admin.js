@@ -63,7 +63,7 @@
     var isAdmin = u.rol === 'admin';
 
     var badge;
-    if (isAdmin) badge = el('span', { class: 'pill pill--staff', text: Foro.CONFIG.CARGO_LABEL[u.cargo] || 'Admin' });
+    if (isAdmin) badge = el('span', { class: 'pill pill--staff' + (u.cargo ? ' pill--' + u.cargo : ''), text: Foro.CONFIG.CARGO_LABEL[u.cargo] || 'Admin' });
     else badge = el('span', { class: 'pill pill--outline', text: u.rol === 'moderador' ? 'Moderador' : 'Usuario' });
 
     var actions = el('div', { class: 'user-row__actions' });

@@ -131,7 +131,7 @@
 
   function cargoBadge(cargo) {
     var label = Foro.CONFIG.CARGO_LABEL[cargo];
-    return label ? el('span', { class: 'pill pill--staff', style: 'margin-left:6px', text: label }) : null;
+    return label ? el('span', { class: 'pill pill--staff pill--' + cargo, style: 'margin-left:6px', text: label }) : null;
   }
 
   function postCard(p) {

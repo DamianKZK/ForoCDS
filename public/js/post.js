@@ -69,7 +69,7 @@
   // Etiqueta verde con el cargo (Comité / Coordinador) junto al nombre.
   function cargoBadge(cargo) {
     var label = Foro.CONFIG.CARGO_LABEL[cargo];
-    return label ? el('span', { class: 'pill pill--staff', text: label }) : null;
+    return label ? el('span', { class: 'pill pill--staff pill--' + cargo, text: label }) : null;
   }
 
   // Botones de moderación: destacar (solo admin) y eliminar (admin o dueño del post).
@@ -182,7 +182,7 @@
     var mine = String(c.usuarioId) === String(Foro.session.id);
     var who = [el('b', { text: c.autor })];
 
-    if (c.oficial) who.push(el('span', { class: 'pill pill--staff' }, Foro.icon('check'), c.rolLabel + ' · Respuesta oficial'));
+    if (c.oficial) who.push(el('span', { class: 'pill pill--staff' + (c.cargo ? ' pill--' + c.cargo : '') }, Foro.icon('check'), c.rolLabel + ' · Respuesta oficial'));
     else who.push(el('span', { class: 'pill pill--outline', text: 'Estudiante' }));
     if (String(c.usuarioId) === String(p.usuarioId)) who.push(el('span', { class: 'pill pill--author', text: 'Autor' }));
     who.push(el('span', { text: '· ' + Foro.timeAgo(c.fecha) }));
@@ -213,7 +213,7 @@
     }
     if (mine || Foro.session.isAdmin) showDelete();
 
-    return el('div', { class: 'comment' + (c.oficial ? ' comment--staff' : '') },
+    return el('div', { class: 'comment' + (c.oficial ? ' comment--staff' + (c.cargo ? ' comment--' + c.cargo : '') : '') },
       el('span', { class: 'avatar', text: Foro.initial(c.autor) }),
       el('div', { class: 'comment__main' },
         el('div', { class: 'comment__head' }, el('div', { class: 'comment__who' }, who), actions),
@@ -224,7 +224,7 @@
 
   function renderComments() {
     var list = current.comments.slice().sort(function (a, b) {
-      if (a.oficial !== b.oficial) return a.oficial ? -1 : 1;
+      if (a.rank !== b.rank) return b.rank - a.rank; // coordinador, comité, otros oficiales, estudiantes
       return (commentTime(a) - commentTime(b)) || (Number(a.id) - Number(b.id));
     });
     $count.textContent = String(list.length);

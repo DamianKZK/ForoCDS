@@ -152,7 +152,8 @@ mark { background: var(--soft); color: inherit; padding: 0 8px; border-radius: 8
 .pill--pend { background: var(--pendbg); color: var(--pendfg); }
 .pill--res { background: var(--resbg); color: var(--resfg); }
 .pill--staff { background: var(--c2bg); color: var(--c2fg); }
-.aside-card--tint .pill--staff { background: var(--surface); }
+.pill--coordinador { background: var(--accent); color: var(--onaccent); }
+.pill--comite { background: var(--soft); color: var(--avfg); }
 .pill--outline { background: transparent; border: 1px solid var(--border2); color: var(--muted); font-weight: 500; font-size: 12px; padding: 2px 10px; }
 .pill--author { background: var(--avbg); color: var(--avfg); font-size: 12px; padding: 2px 10px; }
 
@@ -436,6 +437,10 @@ textarea.input { height: auto; padding: 14px 16px; line-height: 1.5; resize: ver
 .comment--staff { border-color: var(--border); box-shadow: inset 4px 0 0 var(--accent), 0 6px 18px var(--shadowc); }
 .comment .avatar { width: 44px; height: 44px; font-size: 17px; background: var(--surface2); color: var(--text2); }
 .comment--staff .avatar { background: var(--c2bg); color: var(--c2fg); }
+.comment--coordinador { box-shadow: inset 4px 0 0 var(--accent), 0 6px 18px var(--shadowc); }
+.comment--coordinador .avatar { background: var(--accent); color: var(--onaccent); }
+.comment--comite { box-shadow: inset 4px 0 0 var(--cta), 0 6px 18px var(--shadowc); }
+.comment--comite .avatar { background: var(--soft); color: var(--avfg); }
 .comment__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .comment__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .comment__who { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; color: var(--muted); }
