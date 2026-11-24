@@ -185,8 +185,13 @@
   function slug(text) {
     return String(text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   }
+  // Iniciales para el avatar: "Juana Peres" -> "JP". Con una sola palabra, una letra.
   function initial(name) {
-    return (String(name || '?').trim().charAt(0) || '?').toUpperCase();
+    var words = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return '?';
+    var first = Array.from(words[0])[0];
+    var last = words.length > 1 ? Array.from(words[words.length - 1])[0] : '';
+    return (first + last).toUpperCase();
   }
   function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
   function imageUrl(path) {

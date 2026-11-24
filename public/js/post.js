@@ -182,8 +182,7 @@
     var mine = String(c.usuarioId) === String(Foro.session.id);
     var who = [el('b', { text: c.autor })];
 
-    if (c.oficial) who.push(el('span', { class: 'pill pill--staff' + (c.cargo ? ' pill--' + c.cargo : '') }, Foro.icon('check'), c.rolLabel + ' · Respuesta oficial'));
-    else who.push(el('span', { class: 'pill pill--outline', text: 'Estudiante' }));
+    if (!c.oficial) who.push(el('span', { class: 'pill pill--outline', text: 'Estudiante' }));
     if (String(c.usuarioId) === String(p.usuarioId)) who.push(el('span', { class: 'pill pill--author', text: 'Autor' }));
     who.push(el('span', { text: '· ' + Foro.timeAgo(c.fecha) }));
 
@@ -214,8 +213,12 @@
     if (mine || Foro.session.isAdmin) showDelete();
 
     return el('div', { class: 'comment' + (c.oficial ? ' comment--staff' + (c.cargo ? ' comment--' + c.cargo : '') : '') },
-      el('span', { class: 'avatar', text: Foro.initial(c.autor) }),
+      el('span', { class: 'avatar-wrap' },
+        el('span', { class: 'avatar', text: Foro.initial(c.autor) }),
+        c.oficial ? el('span', { class: 'avatar-check', 'aria-hidden': 'true' }, Foro.icon('check')) : null
+      ),
       el('div', { class: 'comment__main' },
+        c.oficial ? el('div', { class: 'comment__role' }, (c.rolLabel || 'Oficial') + ' · Respuesta oficial') : null,
         el('div', { class: 'comment__head' }, el('div', { class: 'comment__who' }, who), actions),
         el('p', { class: 'comment__text', text: c.contenido })
       )

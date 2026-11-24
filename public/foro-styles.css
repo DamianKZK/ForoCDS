@@ -41,6 +41,7 @@
   --offbg: #e6e0d4;
   --offfg: #5f574f;
   --scrim: rgba(31, 26, 23, 0.5);
+  --coord-ink: #a8430f;
 
   --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-body: 'DM Sans', system-ui, sans-serif;
@@ -83,6 +84,7 @@
   --offbg: #2a2436;
   --offfg: #b4a9c6;
   --scrim: rgba(5, 3, 12, 0.7);
+  --coord-ink: #ff9fb2;
 }
 
 /* ---------- Base ---------- */
@@ -433,11 +435,25 @@ textarea.input { height: auto; padding: 14px 16px; line-height: 1.5; resize: ver
   display: flex; gap: 14px; padding: 22px; background: var(--surface); border: 1px solid var(--border);
   border-radius: 24px; box-shadow: 0 6px 18px var(--shadowc);
 }
-.comment--staff { background: var(--shape2); border-color: var(--link); }
+.comment--staff {
+  --role: var(--accent); --role-on: var(--onaccent); --role-ink: var(--link);
+  background: var(--surface); border: 1.5px solid var(--role); box-shadow: 0 10px 26px var(--shadowc);
+}
+.comment--coordinador { --role: var(--cta); --role-on: var(--oncta); --role-ink: var(--coord-ink); }
+.avatar-wrap { position: relative; flex: none; align-self: flex-start; }
+.avatar-check {
+  position: absolute; right: -5px; bottom: -5px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--role); color: var(--role-on); border: 2px solid var(--surface);
+  display: grid; place-items: center;
+}
+.avatar-check svg { width: 11px; height: 11px; }
+.comment__role {
+  display: flex; align-items: center; gap: 8px; color: var(--role-ink);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+}
+.comment__role::before { content: ''; width: 18px; height: 2px; border-radius: 2px; background: var(--role); }
 .comment .avatar { width: 44px; height: 44px; font-size: 17px; background: var(--surface2); color: var(--text2); }
-.comment--staff .avatar { background: var(--accent); color: var(--onaccent); }
-.comment--coordinador { background: var(--shape1); border-color: var(--cta); }
-.comment--coordinador .avatar { background: var(--cta); color: var(--oncta); }
+.comment--staff .avatar { background: var(--surface2); color: var(--text); box-shadow: 0 0 0 2px var(--role); }
 .comment__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .comment__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .comment__who { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; color: var(--muted); }
