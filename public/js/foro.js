@@ -151,7 +151,7 @@
             ' · ' + Foro.timeAgo(p.fecha)
           ),
           el('span', { style: 'display:inline-flex;gap:8px;align-items:center' },
-            p.destacado ? el('span', { class: 'pill', text: '📌 Destacado' }) : null,
+            p.destacado ? el('span', { class: 'pill pill--destacado', text: 'Destacado' }) : null,
             el('span', { class: 'pill ' + (p.resuelta ? 'pill--res' : 'pill--pend'), text: p.resuelta ? 'Resuelta' : 'Pendiente' })
           )
         ),

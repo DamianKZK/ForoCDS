@@ -128,7 +128,7 @@
     var body = [
       el('div', { class: 'article__top' },
         categoryPill(p.categoria),
-        p.destacado ? el('span', { class: 'pill', text: 'Destacado' }) : null,
+        p.destacado ? el('span', { class: 'pill pill--destacado', text: 'Destacado' }) : null,
         el('span', { class: 'pill ' + (p.resuelta ? 'pill--res' : 'pill--pend'), text: p.resuelta ? 'Resuelta' : 'Pendiente' })
       ),
       el('h1', { text: p.titulo }),

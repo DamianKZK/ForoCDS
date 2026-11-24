@@ -467,8 +467,10 @@ textarea.input { height: auto; padding: 14px 16px; line-height: 1.5; resize: ver
   .brand__sub { display: none; }
 }
 
-/*Color de las publicaciones destacadas Uly<3*/
-.post-card--destacado { box-shadow: inset 4px 0 0 #f59e0b; }
+/* Publicaciones destacadas: acento coral (tema claro) / rosa (tema oscuro) */
+.post-card--destacado { border-color: var(--cta); box-shadow: inset 4px 0 0 var(--cta), 0 8px 24px var(--shadowc); }
+.post-card--destacado:hover { box-shadow: inset 4px 0 0 var(--cta), 0 14px 32px var(--shadowc); }
+.pill--destacado { background: var(--cta); color: var(--oncta); }
 
 /* ---------- Panel de administración ---------- */
 .user-row {

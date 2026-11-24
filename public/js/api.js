@@ -80,6 +80,11 @@
         if (!res.ok) {
           var msg = (data && typeof data === 'object' && (data.mensaje || data.error || data.message)) ||
             'Error ' + res.status;
+          // Sesión vencida o sin token: se limpia y se manda al login (el login mismo no cuenta).
+          if (res.status === 401 && path !== '/api/login') {
+            session.clear();
+            window.location.replace('index.html');
+          }
           var err = new Error(msg);
           err.status = res.status;
           throw err;
