@@ -179,7 +179,7 @@
 
   /* ---------- Texto ---------- */
   function slug(text) {
-    return String(text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return String(text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   }
   function initial(name) {
     return (String(name || '?').trim().charAt(0) || '?').toUpperCase();
@@ -225,35 +225,103 @@
     return node;
   }
 
-  /* ---------- Barra superior (menú de usuario) ---------- */
+  /* ---------- Barra superior (menú de usuario y notificaciones) ---------- */
   function initTopbar() {
     var nameEl = document.getElementById('user-name');
     var initEl = document.getElementById('user-initial');
     var btn = document.getElementById('user-btn');
     var panel = document.getElementById('user-panel');
     var logout = document.getElementById('logout');
+
+    var notifBtn = document.getElementById('notif-btn');
+    var notifPanel = document.getElementById('notif-panel');
+    var notifBadge = document.getElementById('notif-badge');
+    var notifList = document.getElementById('notif-list');
+
     if (nameEl) nameEl.textContent = session.nombre;
     if (initEl) initEl.textContent = initial(session.nombre);
-    if (!btn || !panel) return;
-    // Enlace al panel de administración (solo se muestra a los admins).
-    if (session.isAdmin && logout) {
-      panel.insertBefore(el('a', { class: 'usermenu__item', href: 'admin.html', role: 'menuitem', text: 'Administración' }), logout);
+
+    if (btn && panel) {
+      // Enlace al panel de administración (solo se muestra a los admins).
+      if (session.isAdmin && logout) {
+        panel.insertBefore(el('a', { class: 'usermenu__item', href: 'admin.html', role: 'menuitem', text: 'Administración' }), logout);
+      }
+
+      function closeUserMenu() {
+        panel.hidden = true;
+        btn.setAttribute('aria-expanded', 'false');
+      }
+
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = panel.hidden;
+        if (notifPanel && notifBtn) {
+          notifPanel.hidden = true;
+          notifBtn.setAttribute('aria-expanded', 'false');
+        }
+        panel.hidden = !open;
+        btn.setAttribute('aria-expanded', String(open));
+      });
+      document.addEventListener('click', function (e) { if (!panel.contains(e.target)) closeUserMenu(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeUserMenu(); });
+
+      if (logout) {
+        logout.addEventListener('click', function () {
+          session.clear();
+          window.location.href = 'index.html';
+        });
+      }
     }
 
-    function close() { panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
-    btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      var open = panel.hidden;
-      panel.hidden = !open;
-      btn.setAttribute('aria-expanded', String(open));
-    });
-    document.addEventListener('click', function (e) { if (!panel.contains(e.target)) close(); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
-    if (logout) {
-      logout.addEventListener('click', function () {
-        session.clear();
-        window.location.href = 'index.html';
+    // --- Notificaciones in-app ---
+    if (notifBtn && notifPanel && notifList && session.token) {
+      function closeNotif() {
+        notifPanel.hidden = true;
+        notifBtn.setAttribute('aria-expanded', 'false');
+      }
+
+      notifBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = notifPanel.hidden;
+        if (panel && btn) {
+          panel.hidden = true;
+          btn.setAttribute('aria-expanded', 'false');
+        }
+        notifPanel.hidden = !open;
+        notifBtn.setAttribute('aria-expanded', String(open));
       });
+      document.addEventListener('click', function (e) { if (!notifPanel.contains(e.target)) closeNotif(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNotif(); });
+
+      request('/api/notificaciones').then(function (items) {
+        if (!Array.isArray(items) || items.length === 0) return;
+
+        var noLeidas = items.filter(function (n) { return Number(n.leida) === 0; }).length;
+        if (notifBadge) {
+          notifBadge.textContent = noLeidas;
+          notifBadge.hidden = noLeidas === 0;
+        }
+
+        notifList.replaceChildren();
+        items.forEach(function (n) {
+          var leida = Number(n.leida) === 1;
+          var item = el('a', {
+            class: 'usermenu__item',
+            href: 'post.html?id=' + encodeURIComponent(n.post_id),
+            role: 'menuitem',
+            style: 'flex-direction:column; align-items:flex-start; gap:4px; padding:10px 12px; border-bottom:1px solid var(--border); opacity:' + (leida ? '0.65' : '1'),
+            onclick: function () {
+              if (!leida) {
+                request('/api/notificaciones/' + encodeURIComponent(n.id) + '/leer', { method: 'PUT' }).catch(function () {});
+              }
+            }
+          },
+            el('span', { style: 'white-space:normal; font-weight:' + (leida ? '400' : '600'), text: n.mensaje }),
+            el('small', { style: 'color:var(--muted); font-size:12px;', text: timeAgo(n.fecha_creacion) })
+          );
+          notifList.appendChild(item);
+        });
+      }).catch(function () { /* ignorar si falla silenciosamente */ });
     }
   }
 

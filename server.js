@@ -12,6 +12,7 @@ const usuariosRoutes = require('./src/routes/usuariosRoutes');
 const postsRoutes = require('./src/routes/postsRoutes');
 const comentariosRoutes = require('./src/routes/comentariosRoutes');
 const categoriasRoutes = require('./src/routes/categoriasRoutes');
+const notificacionesRoutes = require('./src/routes/notificacionesRoutes'); // <--- NUEVA IMPORTACIÓN
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,9 +32,9 @@ app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/posts', postsRoutes);
 app.use('/api/comentarios', comentariosRoutes);
 app.use('/api/categorias', categoriasRoutes);
+app.use('/api/notificaciones', notificacionesRoutes); // <--- NUEVA RUTA MONTADA
 
 // Ruta para procesar el login
-// Usa el mismo pool de src/config/db.js — ya no se crea una conexión aparte aquí.
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -68,7 +69,7 @@ app.post('/api/login', async (req, res) => {
       email: usuario.email,
       rol: usuario.rol,
       cargo: usuario.cargo,
-});
+    });
   } catch (error) {
     console.error('Error en la base de datos:', error);
     return res.status(500).json({ error: 'Error del servidor al procesar el login.' });
